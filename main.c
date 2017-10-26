@@ -1,10 +1,10 @@
-#include "../../lib/libgraphique.h"
+﻿#include "../../lib/libgraphique.h"
 #include "./charge_labyrinthe.h"
 #include <stdio.h>
 
 #define COTE 10
-#define FEN_X 1200
-#define FEN_Y 850
+#define FEN_X 1190
+#define FEN_Y 950
 
 /* Définitions des structures */
 
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	//Variables de la boucle de mouvement
 	
 	int Touche_Press, IsTouchPress;
-	Point Pos_Temp = {0, 0};
+	Point Pos_Temp = {0, 0}, Coordonnes_Texte_Tour = {430, 845};
 	char Char_Temp = ' ';
 	Tableau Tableau_Temp = {0, 0};
 	
@@ -110,7 +110,26 @@ int main(int argc, char *argv[])
     while (!Check_Win(J1, J2))
     {
 		
-		Touche_Press = attendre_touche(); /* On attend une pression sur une touche */
+		//Point clic;
+		//clic = attendre_clic();
+		//printf("X: %d / Y: %d\n", clic.x, clic.y);
+		
+		Point Taille_Texte = taille_texte("C'est au joueur 1 de jouer !", 30);
+		
+		if (Tour == 1)
+		{
+			dessiner_rectangle(Coordonnes_Texte_Tour, Taille_Texte.x, Taille_Texte.y, black);
+			afficher_texte("C'est au joueur 1 de jouer !", 30, Coordonnes_Texte_Tour, blanc);
+		}
+		else
+		{
+			dessiner_rectangle(Coordonnes_Texte_Tour, Taille_Texte.x, Taille_Texte.y, black);
+			afficher_texte("C'est au joueur 2 de jouer !", 30, Coordonnes_Texte_Tour, blanc);
+		}
+			
+		actualiser();	
+			
+		Touche_Press = attendre_touche_duree(1000); /* On attend une pression sur une touche */
 		
 		Pos_Temp.x = 0;
 		Pos_Temp.y = 0;
@@ -120,187 +139,219 @@ int main(int argc, char *argv[])
 		Tableau_Temp.Ligne = 0;
 		Tableau_Temp.Colonne = 0;
 		
+
+			
 		switch (Touche_Press)
     	{
     		case SDLK_UP:
     			
-    			Pos_Temp.x = J1.Pos.x;
-    			Pos_Temp.y = J1.Pos.y - Espacement;
-    			
-    			Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-    			
-    			Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-    			
-    			if (Char_Temp != '*')
+    			if (Tour == 1)
     			{
- 					J1.Pos.y -= Espacement;
- 					
-					Check_And_Change_Letter(tab, 1, 0, J1);
- 						 
- 					J1.Pos_Tab = Tableau_Temp;
- 					
-					Check_And_Change_Letter(tab, 1, 1, J1);
- 					
-    			}
-    				
+					Pos_Temp.x = J1.Pos.x;
+					Pos_Temp.y = J1.Pos.y - Espacement;
+					
+					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					
+					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+					
+					if (Char_Temp != '*')
+					{
+	 					J1.Pos.y -= Espacement;
+	 					
+						Check_And_Change_Letter(tab, 1, 0, J1);
+	 						 
+	 					J1.Pos_Tab = Tableau_Temp;
+	 					
+						Check_And_Change_Letter(tab, 1, 1, J1);
+	 					
+					}
+						
+
+    			}		
+    			
     			break;
     			
     		case SDLK_DOWN:
     		
-    			Pos_Temp.x = J1.Pos.x;
-    			Pos_Temp.y = J1.Pos.y + Espacement;
-    			
-    			Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-    			
-    			Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-    			
-    			if (Char_Temp != '*')
+    			if (Tour == 1)
     			{
-    				J1.Pos.y += Espacement;
-    				
-    				Check_And_Change_Letter(tab, 1, 0, J1);
- 						 
-    				J1.Pos_Tab = Tableau_Temp;
-    				
-    				Check_And_Change_Letter(tab, 1, 1, J1);
+					
+					Pos_Temp.x = J1.Pos.x;
+					Pos_Temp.y = J1.Pos.y + Espacement;
+					
+					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					
+					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+					
+					if (Char_Temp != '*')
+					{
+						J1.Pos.y += Espacement;
+						
+						Check_And_Change_Letter(tab, 1, 0, J1);
+	 						 
+						J1.Pos_Tab = Tableau_Temp;
+						
+						Check_And_Change_Letter(tab, 1, 1, J1);
+					}			
+
     			}
     			
-    			break;
-    			
+    			break;    
+    						
     		case SDLK_LEFT:
     		
-    			Pos_Temp.x = J1.Pos.x - Espacement;
-    			Pos_Temp.y = J1.Pos.y;
-    			
-    			Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-    			
-    			Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-    			
-    			if (Char_Temp != '*')
+    			if (Tour == 1)
     			{
-					J1.Pos.x -= Espacement;
+					Pos_Temp.x = J1.Pos.x - Espacement;
+					Pos_Temp.y = J1.Pos.y;
 					
-					Check_And_Change_Letter(tab, 1, 0, J1);
- 						 
-					J1.Pos_Tab = Tableau_Temp;
+					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
 					
-					Check_And_Change_Letter(tab, 1, 1, J1);
-    			}
+					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+					
+					if (Char_Temp != '*')
+					{
+						J1.Pos.x -= Espacement;
+						
+						Check_And_Change_Letter(tab, 1, 0, J1);
+	 						 
+						J1.Pos_Tab = Tableau_Temp;
+						
+						Check_And_Change_Letter(tab, 1, 1, J1);
+					}
     			
+    			}
+
     			break;
     			
     		case SDLK_RIGHT:
-    		
-    			Pos_Temp.x = J1.Pos.x + Espacement;
-    			Pos_Temp.y = J1.Pos.y;
     			
-    			Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-    			
-    			Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-    			
-    			if (Char_Temp != '*')
+    			if (Tour == 1)
     			{
-    				J1.Pos.x += Espacement;
-    				
-    				Check_And_Change_Letter(tab, 1, 0, J1);
- 						 
-    				J1.Pos_Tab = Tableau_Temp;
-    				
-    				Check_And_Change_Letter(tab, 1, 1, J1);
+		 			Pos_Temp.x = J1.Pos.x + Espacement;
+					Pos_Temp.y = J1.Pos.y;
+					
+					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					
+					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+					
+					if (Char_Temp != '*')
+					{
+						J1.Pos.x += Espacement;
+						
+						Check_And_Change_Letter(tab, 1, 0, J1);
+	 						 
+						J1.Pos_Tab = Tableau_Temp;
+						
+						Check_And_Change_Letter(tab, 1, 1, J1);
+					}   			
     			}
     			
     			break;
     			
     		case SDLK_z:
     			
-    			Pos_Temp.x = J2.Pos.x;
-    			Pos_Temp.y = J2.Pos.y - Espacement;
-    			
-    			Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-    			
-    			Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-    			
-    			if (Char_Temp != '*')
+    			if (Tour == 2)
     			{
- 					J2.Pos.y -= Espacement;
- 					
- 					Check_And_Change_Letter(tab, 0, 0, J2);
- 						 
- 					J2.Pos_Tab = Tableau_Temp;
- 					
- 					Check_And_Change_Letter(tab, 0, 1, J2);
- 					
+					Pos_Temp.x = J2.Pos.x;
+					Pos_Temp.y = J2.Pos.y - Espacement;
+					
+					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					
+					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+					
+					if (Char_Temp != '*')
+					{
+	 					J2.Pos.y -= Espacement;
+	 					
+	 					Check_And_Change_Letter(tab, 0, 0, J2);
+	 						 
+	 					J2.Pos_Tab = Tableau_Temp;
+	 					
+	 					Check_And_Change_Letter(tab, 0, 1, J2);
+	 					
+					}    			
     			}
-    			
+		
     			break;
     			
     		case SDLK_s:
-
-    			Pos_Temp.x = J2.Pos.x;
-    			Pos_Temp.y = J2.Pos.y + Espacement;
-    			
-    			Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-    			
-    			Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-    			
-    			if (Char_Temp != '*')
-    			{
- 					J2.Pos.y += Espacement;
- 					
- 					Check_And_Change_Letter(tab, 0, 0, J2);
- 						 
- 					J2.Pos_Tab = Tableau_Temp;
- 					
- 					Check_And_Change_Letter(tab, 0, 1, J2);
- 					
-    			}
+				
+				if (Tour == 2)
+				{
+					Pos_Temp.x = J2.Pos.x;
+					Pos_Temp.y = J2.Pos.y + Espacement;
+					
+					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					
+					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+					
+					if (Char_Temp != '*')
+					{
+	 					J2.Pos.y += Espacement;
+	 					
+	 					Check_And_Change_Letter(tab, 0, 0, J2);
+	 						 
+	 					J2.Pos_Tab = Tableau_Temp;
+	 					
+	 					Check_And_Change_Letter(tab, 0, 1, J2);
+	 					
+					}
+				}
     		
     			break;
     			
     		case SDLK_q:
 
-    			Pos_Temp.x = J2.Pos.x - Espacement;
-    			Pos_Temp.y = J2.Pos.y;
-    			
-    			Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-    			
-    			Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-    			
-    			if (Char_Temp != '*')
-    			{
- 					J2.Pos.x -= Espacement;
- 					
- 					Check_And_Change_Letter(tab, 0, 0, J2);
+				if (Tour == 2)
+				{
+					Pos_Temp.x = J2.Pos.x - Espacement;
+					Pos_Temp.y = J2.Pos.y;
+					
+					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					
+					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+					
+					if (Char_Temp != '*')
+					{
+	 					J2.Pos.x -= Espacement;
+	 					
+	 					Check_And_Change_Letter(tab, 0, 0, J2);
 
- 					J2.Pos_Tab = Tableau_Temp;
- 					
- 					Check_And_Change_Letter(tab, 0, 1, J2);
- 					
-    			}
+	 					J2.Pos_Tab = Tableau_Temp;
+	 					
+	 					Check_And_Change_Letter(tab, 0, 1, J2);
+	 					
+					}
     		
+				}
+
     			break;
     			
     		case SDLK_d:
-
-    			Pos_Temp.x = J2.Pos.x + Espacement;
-    			Pos_Temp.y = J2.Pos.y;
-    			
-    			Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-    			
-    			Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-    			
-    			if (Char_Temp != '*')
-    			{
- 					J2.Pos.x += Espacement;
- 					
- 					Check_And_Change_Letter(tab, 0, 0, J2);
- 						 
- 					J2.Pos_Tab = Tableau_Temp;
- 					
- 					Check_And_Change_Letter(tab, 0, 1, J2);
- 					
-    			}
-    		
+				
+				if (Tour == 2)
+				{
+					Pos_Temp.x = J2.Pos.x + Espacement;
+					Pos_Temp.y = J2.Pos.y;
+					
+					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					
+					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+					
+					if (Char_Temp != '*')
+					{
+	 					J2.Pos.x += Espacement;
+	 					
+	 					Check_And_Change_Letter(tab, 0, 0, J2);
+	 						 
+	 					J2.Pos_Tab = Tableau_Temp;
+	 					
+	 					Check_And_Change_Letter(tab, 0, 1, J2);
+	 					
+					}
+				}
+	
     			break;
     			
     		case SDLK_ESCAPE:
@@ -308,12 +359,32 @@ int main(int argc, char *argv[])
     			return 0;
     			
     			break;
+    			
+    		case SDLK_F1:
+    			
+    			J1.Pos.x = J1.Sortie.x;
+    			J1.Pos.y = J1.Sortie.y;
+    			
+    			break;
+    			
+    		case SDLK_F2:
+    		
+    			J2.Pos.x = J2.Sortie.x;
+    			J2.Pos.y = J2.Sortie.y;
+    			
+    			break;
+    			
     	}
     	
     	
 		Refresh_Maze(tab, J1.Pos, J2.Pos, Espacement);
 		
     	actualiser();
+    	
+    	if (Tour == 1)
+    		Tour = 2;
+    	else
+    		Tour = 1;
 		
     }
     
@@ -385,11 +456,11 @@ void Win(int isJ1)
 {
 
 	Point Pos_Texte = {100, 100};
-	
+
 	if (isJ1)
-		//afficher_texte("Bonjour", 8, Pos_Texte, blanc);
+		afficher_texte("Le joueur 1 a gagné !", 24, Pos_Texte, blanc);
 	else
-		afficher_texte("J", 2, Pos_Texte, blanc);
+		afficher_texte("Le joueur 2 a gagné !", 24, Pos_Texte, blanc);
 
 	actualiser();
 	
