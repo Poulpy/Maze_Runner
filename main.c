@@ -1,4 +1,4 @@
-﻿#include "../../lib/libgraphique.h"
+﻿#include "./lib/libgraphique.h"
 #include "./charge_labyrinthe.h"
 #include <stdio.h>
 
@@ -19,8 +19,13 @@ typedef struct Joueur { /* Structure définissant un joueur */
 	Tableau Pos_Tab; /* Sa position dans le tableau du labyrinthe */
 	Point Pos; /* Sa position graphiquement dans la fenêtre */
 	Point Sortie; /* La sortie que le joueur doit rejoindre */
+	Couleur Couleur;
 	
 } Joueur;
+
+typedef enum Direction {
+	HAUT, BAS, GAUCHE, DROITE
+} Direction;
 
 /* Définitions des prototypes de fonctions */
 
@@ -31,7 +36,7 @@ Tableau Get_Tab_Pos_By_Pos(char tab[LIG][COL], Point Pos, int Espacement);
 int Main_Menu(char tab[LIG][COL]);
 int Check_Win(Joueur J1, Joueur J2);
 void Win(int isJ1);
-
+void Deplacement(char tab[LIG][COL], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1);
 void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Joueur);
 
 
@@ -49,23 +54,24 @@ int main(int argc, char *argv[])
 	
 	//Variables de la boucle de mouvement
 	
-	int Touche_Press, IsTouchPress;
+	int Touche_Press;
 	Point Pos_Temp = {0, 0}, Coordonnes_Texte_Tour = {430, 845};
 	char Char_Temp = ' ';
 	Tableau Tableau_Temp = {0, 0};
 	
 	//Variables des deux joueurs
 	
-	Joueur J1 = {0, {0, 0}, {0, 0}, {0, 0}}, J2 = {0, {0, 0} ,{0, 0}, {0, 0}};
-   
-	/* Menu principal */
+	Joueur J1 = {0, {0, 0}, {0, 0}, {0, 0}, yellow}, J2 = {0, {0, 0} ,{0, 0}, {0, 0}, yellow};
+
+	ouvrir_fenetre(FEN_X, FEN_Y);
 	
+	/* Menu principal */
+		
 	if (!Main_Menu(tab)) //On lance le menu principal
 		return 0; //Si il renvoie 0 cela veut dire que l'utilisateur veut quitter
 	 
 	//Sinon on ouvre la fenêtre graphique 
-	
-    ouvrir_fenetre(FEN_X, FEN_Y);
+
 
 	/* Initialisation de la position des joueurs */
     
@@ -150,23 +156,8 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J1.Pos.x;
 					Pos_Temp.y = J1.Pos.y - Espacement;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					Deplacement(tab, Pos_Temp, &J1, Espacement, HAUT, 1);
 					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J1.Pos.y -= Espacement;
-	 					
-						Check_And_Change_Letter(tab, 1, 0, J1);
-	 						 
-	 					J1.Pos_Tab = Tableau_Temp;
-	 					
-						Check_And_Change_Letter(tab, 1, 1, J1);
-	 					
-					}
-						
-
     			}		
     			
     			break;
@@ -179,20 +170,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J1.Pos.x;
 					Pos_Temp.y = J1.Pos.y + Espacement;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-						J1.Pos.y += Espacement;
-						
-						Check_And_Change_Letter(tab, 1, 0, J1);
-	 						 
-						J1.Pos_Tab = Tableau_Temp;
-						
-						Check_And_Change_Letter(tab, 1, 1, J1);
-					}			
+					Deplacement(tab, Pos_Temp, &J1, Espacement, BAS, 1);			
 
     			}
     			
@@ -205,20 +183,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J1.Pos.x - Espacement;
 					Pos_Temp.y = J1.Pos.y;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-						J1.Pos.x -= Espacement;
-						
-						Check_And_Change_Letter(tab, 1, 0, J1);
-	 						 
-						J1.Pos_Tab = Tableau_Temp;
-						
-						Check_And_Change_Letter(tab, 1, 1, J1);
-					}
+					Deplacement(tab, Pos_Temp, &J1, Espacement, GAUCHE, 1);
     			
     			}
 
@@ -231,20 +196,7 @@ int main(int argc, char *argv[])
 		 			Pos_Temp.x = J1.Pos.x + Espacement;
 					Pos_Temp.y = J1.Pos.y;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-						J1.Pos.x += Espacement;
-						
-						Check_And_Change_Letter(tab, 1, 0, J1);
-	 						 
-						J1.Pos_Tab = Tableau_Temp;
-						
-						Check_And_Change_Letter(tab, 1, 1, J1);
-					}   			
+					Deplacement(tab, Pos_Temp, &J1, Espacement, DROITE, 1); 			
     			}
     			
     			break;
@@ -256,21 +208,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J2.Pos.x;
 					Pos_Temp.y = J2.Pos.y - Espacement;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J2.Pos.y -= Espacement;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 0, J2);
-	 						 
-	 					J2.Pos_Tab = Tableau_Temp;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 1, J2);
-	 					
-					}    			
+					Deplacement(tab, Pos_Temp, &J2, Espacement, HAUT, 0);			
     			}
 		
     			break;
@@ -282,21 +220,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J2.Pos.x;
 					Pos_Temp.y = J2.Pos.y + Espacement;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J2.Pos.y += Espacement;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 0, J2);
-	 						 
-	 					J2.Pos_Tab = Tableau_Temp;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 1, J2);
-	 					
-					}
+					Deplacement(tab, Pos_Temp, &J2, Espacement, BAS, 0);			
 				}
     		
     			break;
@@ -308,21 +232,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J2.Pos.x - Espacement;
 					Pos_Temp.y = J2.Pos.y;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J2.Pos.x -= Espacement;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 0, J2);
-
-	 					J2.Pos_Tab = Tableau_Temp;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 1, J2);
-	 					
-					}
+					Deplacement(tab, Pos_Temp, &J2, Espacement, GAUCHE, 0);			
     		
 				}
 
@@ -335,21 +245,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J2.Pos.x + Espacement;
 					Pos_Temp.y = J2.Pos.y;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J2.Pos.x += Espacement;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 0, J2);
-	 						 
-	 					J2.Pos_Tab = Tableau_Temp;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 1, J2);
-	 					
-					}
+					Deplacement(tab, Pos_Temp, &J2, Espacement, DROITE, 0);			
 				}
 	
     			break;
@@ -402,7 +298,7 @@ int main(int argc, char *argv[])
 /*             Fonctions principales                             */
 
 
-int Main_Menu(char tab[LIG][COL])
+int Main_Menu(char tab[LIG][COL]) //Affiche le menu principal
 {
 
 	int Choix_User = 0;
@@ -438,7 +334,7 @@ int Main_Menu(char tab[LIG][COL])
 		
 }
 
-int Check_Win(Joueur J1, Joueur J2)
+int Check_Win(Joueur J1, Joueur J2) //Regarde quel joueur a gagné
 {
 	if (((J1.Pos.x != J1.Sortie.x) || (J1.Pos.y != J1.Sortie.y)) && ((J2.Pos.x != J2.Sortie.x) || (J2.Pos.y != J2.Sortie.y)))
 		return 0;
@@ -452,7 +348,7 @@ int Check_Win(Joueur J1, Joueur J2)
 }
 
 
-void Win(int isJ1)
+void Win(int isJ1) //Affiche la victoire d'un des deux joueurs'
 {
 
 	Point Pos_Texte = {100, 100};
@@ -468,6 +364,45 @@ void Win(int isJ1)
 	
 }
 
+
+void Deplacement(char tab[LIG][COL], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1)
+{
+	
+	Tableau Tableau_Temp = {0, 0};
+	char Char_Temp = ' ';
+	
+	Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+
+	Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+
+	if (Char_Temp != '*')
+	{
+		if (Direction == HAUT)
+	 		Joueur -> Pos.y -= Espacement;
+		else if (Direction == BAS)
+			 Joueur -> Pos.y += Espacement;
+		else if (Direction == GAUCHE)
+			 Joueur -> Pos.x -= Espacement;
+		else if (Direction == DROITE)
+			 Joueur -> Pos.x += Espacement;
+			 
+		if (isJ1)
+			Check_And_Change_Letter(tab, 1, 0, *Joueur);
+		else
+			Check_And_Change_Letter(tab, 0, 0, *Joueur);
+			
+	 	Joueur -> Pos_Tab = Tableau_Temp;
+		
+		if (isJ1)
+			Check_And_Change_Letter(tab, 1, 1, *Joueur);
+		else
+			Check_And_Change_Letter(tab, 0, 1, *Joueur);
+
+	}
+
+}
+
+
 void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Joueur)
 {
 	if (isJ1 && !Phase2)
@@ -475,7 +410,7 @@ void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Jo
 		 if (tab[Joueur.Pos_Tab.Ligne][Joueur.Pos_Tab.Colonne] == 'T')
  			tab[Joueur.Pos_Tab.Ligne][Joueur.Pos_Tab.Colonne] = 'K';
  		 else
- 			tab[Joueur.Pos_Tab.Ligne][Joueur.Pos_Tab.Colonne] = ' ';	
+ 			tab[Joueur.Pos_Tab.Ligne][Joueur.Pos_Tab.Colonne] = ' ';
 	}
 	else if (isJ1 && Phase2)
 	{
@@ -500,7 +435,7 @@ void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Jo
 	}
 }
 
-Point Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacement)
+Point Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacement) //Raffraichit le labyrinthe
 {
 
 	int i, l, c;
@@ -566,7 +501,7 @@ Point Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacemen
 	
 }
 
-Tableau Get_Tab_Pos_By_Pos(char tab[LIG][COL], Point Pos, int Espacement)
+Tableau Get_Tab_Pos_By_Pos(char tab[LIG][COL], Point Pos, int Espacement) //Renvoit une coordonnée sur le tableau en fonction d'un point graphique'
 {
 	int i, l, c;
 	Point Coin = {0, 0};
