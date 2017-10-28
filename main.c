@@ -6,7 +6,17 @@
 #define FEN_X 1190
 #define FEN_Y 950
 
-/* Définitions des structures */
+#define NBR_BTN 10
+
+/* ======== Définitions des structures ======== */
+
+typedef enum Direction { /* Enumérations des différentes direction de déplacement possible */
+	HAUT, BAS, GAUCHE, DROITE
+} Direction;
+
+typedef enum Type_Bouton {
+	MENU_PRINCIPAL, JEU
+} Type_Bouton;
 
 typedef struct Tableau { /* Structure définissant un tableau avec ses lignes et ses colonnes */
 	int Ligne;
@@ -19,20 +29,48 @@ typedef struct Joueur { /* Structure définissant un joueur */
 	Tableau Pos_Tab; /* Sa position dans le tableau du labyrinthe */
 	Point Pos; /* Sa position graphiquement dans la fenêtre */
 	Point Sortie; /* La sortie que le joueur doit rejoindre */
+	Couleur Couleur;
 	
 } Joueur;
 
-/* Définitions des prototypes de fonctions */
+typedef struct Bouton {
+	
+	Point Pos_HautG; /* Position haut gauche d'un bouton */
+	Point Pos_BasD; /* Position bas droite d'un bouton */
+	char* Texte; /* Le texte du bouton */
+	Type_Bouton Type_Bouton; /* Le menu dans lequel sera affiché le bouton */
+	char* Image; /* Le chemin d'accès à l'image du bouton */
+	
+} Bouton;
 
+
+
+/* ======== Définitions des prototypes de fonctions ======== */
+
+//Fonctions d'affichage
 Point Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacement);
+void Clear_Screen();
 
+//Fonctions des menus
+int Main_Menu(char tab[LIG][COL], Bouton Liste_Bouton[NBR_BTN]);
+
+//Fonctions de déplacement
+void Deplacement(char tab[LIG][COL], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1);
+void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Joueur);
 Tableau Get_Tab_Pos_By_Pos(char tab[LIG][COL], Point Pos, int Espacement);
 
-int Main_Menu(char tab[LIG][COL]);
+//Fonctions lors de la victoire
 int Check_Win(Joueur J1, Joueur J2);
-void Win(int isJ1);
+void Win(int isJ1, Bouton Liste_Bouton[NBR_BTN]);
 
-void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Joueur);
+//Fonctions gérants les boutons
+int isButtonHit(Type_Bouton TypeBouton, Bouton Liste_Bouton[NBR_BTN], Point Pos_Clic);
+void Afficher_Bouton(Type_Bouton TypeBouton, Bouton Liste_Bouton[NBR_BTN]);
+void Add_Buttons(Bouton Liste_Bouton[NBR_BTN]);
+
+//Autres fonctions utiles
+int min(int a, int b);
+int mon_abs(int a);
 
 
 /* ======== Main ======== */
@@ -40,34 +78,38 @@ void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Jo
 int main(int argc, char *argv[])
 {
 
-	/* Initialisation des variables */
+	/* ======== Initialisation des variables ======== */
 	
     char tab[LIG][COL];
+    
+    Bouton Liste_Boutons[NBR_BTN];
     
 	int col, lig; 
 	int maze_col = 63, maze_lig = 45, Espacement = 13, Tour = 1;
 	
 	//Variables de la boucle de mouvement
 	
-	int Touche_Press, IsTouchPress;
-	Point Pos_Temp = {0, 0}, Coordonnes_Texte_Tour = {430, 845};
-	char Char_Temp = ' ';
-	Tableau Tableau_Temp = {0, 0};
+	int Touche_Press;
+	
+	Point Pos_Temp = {0, 0}, Coordonnes_Texte_Tour = {430, 845}, Taille_Texte = taille_texte("C'est au joueur 1 de jouer !", 30);
 	
 	//Variables des deux joueurs
 	
-	Joueur J1 = {0, {0, 0}, {0, 0}, {0, 0}}, J2 = {0, {0, 0} ,{0, 0}, {0, 0}};
-   
-	/* Menu principal */
-	
-	if (!Main_Menu(tab)) //On lance le menu principal
-		return 0; //Si il renvoie 0 cela veut dire que l'utilisateur veut quitter
-	 
-	//Sinon on ouvre la fenêtre graphique 
-	
-    ouvrir_fenetre(FEN_X, FEN_Y);
+	Joueur J1 = {0, {0, 0}, {0, 0}, {0, 0}, yellow}, J2 = {0, {0, 0} ,{0, 0}, {0, 0}, yellow};
 
-	/* Initialisation de la position des joueurs */
+	ouvrir_fenetre(FEN_X, FEN_Y);
+	
+	Add_Buttons(Liste_Boutons);
+	
+	/* ======== Menu principal ======== */
+	
+	if (!Main_Menu(tab, Liste_Boutons)) //On lance le menu principal
+		return 0; //Si il renvoie 0 cela veut dire que l'utilisateur veut quitter
+
+	Clear_Screen();
+	actualiser();
+	
+	/* ======== Initialisation de la position des joueurs ======== */
     
 	do
     {
@@ -91,6 +133,8 @@ int main(int argc, char *argv[])
      	
     } while ((J1.Pos.x > (maze_lig * Espacement) + 2) || (J1.Pos.y > (maze_col * Espacement) + 2));
     
+    /* On configure la position des 2 joueurs ainsi que celle de leur sortie */
+    
     J1.Pos_Tab.Colonne = col;
     J1.Pos_Tab.Ligne = lig;
      
@@ -105,7 +149,7 @@ int main(int argc, char *argv[])
 	actualiser();
 	
 	
-	/* Boucle principale de jeu tant qu'un joueur n'a pas atteint une sortie */
+	/* ======== Boucle principale de jeu tant qu'un joueur n'a pas atteint une sortie ======== */
 
     while (!Check_Win(J1, J2))
     {
@@ -113,8 +157,6 @@ int main(int argc, char *argv[])
 		//Point clic;
 		//clic = attendre_clic();
 		//printf("X: %d / Y: %d\n", clic.x, clic.y);
-		
-		Point Taille_Texte = taille_texte("C'est au joueur 1 de jouer !", 30);
 		
 		if (Tour == 1)
 		{
@@ -133,12 +175,6 @@ int main(int argc, char *argv[])
 		
 		Pos_Temp.x = 0;
 		Pos_Temp.y = 0;
-		
-		Char_Temp = ' ';
-		
-		Tableau_Temp.Ligne = 0;
-		Tableau_Temp.Colonne = 0;
-		
 
 			
 		switch (Touche_Press)
@@ -150,23 +186,8 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J1.Pos.x;
 					Pos_Temp.y = J1.Pos.y - Espacement;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+					Deplacement(tab, Pos_Temp, &J1, Espacement, HAUT, 1);
 					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J1.Pos.y -= Espacement;
-	 					
-						Check_And_Change_Letter(tab, 1, 0, J1);
-	 						 
-	 					J1.Pos_Tab = Tableau_Temp;
-	 					
-						Check_And_Change_Letter(tab, 1, 1, J1);
-	 					
-					}
-						
-
     			}		
     			
     			break;
@@ -179,20 +200,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J1.Pos.x;
 					Pos_Temp.y = J1.Pos.y + Espacement;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-						J1.Pos.y += Espacement;
-						
-						Check_And_Change_Letter(tab, 1, 0, J1);
-	 						 
-						J1.Pos_Tab = Tableau_Temp;
-						
-						Check_And_Change_Letter(tab, 1, 1, J1);
-					}			
+					Deplacement(tab, Pos_Temp, &J1, Espacement, BAS, 1);			
 
     			}
     			
@@ -205,20 +213,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J1.Pos.x - Espacement;
 					Pos_Temp.y = J1.Pos.y;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-						J1.Pos.x -= Espacement;
-						
-						Check_And_Change_Letter(tab, 1, 0, J1);
-	 						 
-						J1.Pos_Tab = Tableau_Temp;
-						
-						Check_And_Change_Letter(tab, 1, 1, J1);
-					}
+					Deplacement(tab, Pos_Temp, &J1, Espacement, GAUCHE, 1);
     			
     			}
 
@@ -231,20 +226,7 @@ int main(int argc, char *argv[])
 		 			Pos_Temp.x = J1.Pos.x + Espacement;
 					Pos_Temp.y = J1.Pos.y;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-						J1.Pos.x += Espacement;
-						
-						Check_And_Change_Letter(tab, 1, 0, J1);
-	 						 
-						J1.Pos_Tab = Tableau_Temp;
-						
-						Check_And_Change_Letter(tab, 1, 1, J1);
-					}   			
+					Deplacement(tab, Pos_Temp, &J1, Espacement, DROITE, 1); 			
     			}
     			
     			break;
@@ -256,21 +238,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J2.Pos.x;
 					Pos_Temp.y = J2.Pos.y - Espacement;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J2.Pos.y -= Espacement;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 0, J2);
-	 						 
-	 					J2.Pos_Tab = Tableau_Temp;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 1, J2);
-	 					
-					}    			
+					Deplacement(tab, Pos_Temp, &J2, Espacement, HAUT, 0);			
     			}
 		
     			break;
@@ -282,21 +250,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J2.Pos.x;
 					Pos_Temp.y = J2.Pos.y + Espacement;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J2.Pos.y += Espacement;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 0, J2);
-	 						 
-	 					J2.Pos_Tab = Tableau_Temp;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 1, J2);
-	 					
-					}
+					Deplacement(tab, Pos_Temp, &J2, Espacement, BAS, 0);			
 				}
     		
     			break;
@@ -308,21 +262,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J2.Pos.x - Espacement;
 					Pos_Temp.y = J2.Pos.y;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J2.Pos.x -= Espacement;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 0, J2);
-
-	 					J2.Pos_Tab = Tableau_Temp;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 1, J2);
-	 					
-					}
+					Deplacement(tab, Pos_Temp, &J2, Espacement, GAUCHE, 0);			
     		
 				}
 
@@ -335,21 +275,7 @@ int main(int argc, char *argv[])
 					Pos_Temp.x = J2.Pos.x + Espacement;
 					Pos_Temp.y = J2.Pos.y;
 					
-					Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
-					
-					Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
-					
-					if (Char_Temp != '*')
-					{
-	 					J2.Pos.x += Espacement;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 0, J2);
-	 						 
-	 					J2.Pos_Tab = Tableau_Temp;
-	 					
-	 					Check_And_Change_Letter(tab, 0, 1, J2);
-	 					
-					}
+					Deplacement(tab, Pos_Temp, &J2, Espacement, DROITE, 0);			
 				}
 	
     			break;
@@ -388,57 +314,57 @@ int main(int argc, char *argv[])
 		
     }
     
-    if (Check_Win(J1, J2) == 1)
-    	Win(1);
+    if (Check_Win(J1, J2) == 1) /* On regarde si un joueur à atteint la sortie */
+    	Win(1, Liste_Boutons);
     else
-    	Win(0);
+    	Win(0, Liste_Boutons);
     
-    // fin de la session graphique
+    // Fin de la session graphique
+    
     fermer_fenetre();
     return 0;
 }
 
 
-/*             Fonctions principales                             */
+/* ======== Fonctions ======== */
 
 
-int Main_Menu(char tab[LIG][COL])
+int Main_Menu(char tab[LIG][COL], Bouton List_Bouton[NBR_BTN]) //Affiche le menu principal
 {
 
-	int Choix_User = 0;
-	
-	while (Choix_User != 1 && Choix_User != 2 && Choix_User != 3)
-	{
-		system("clear");
-		printf("=== Ultimate Maze Runner ===\n");
-		printf("1 - Jouer Labyrinthe 1\n");
-		printf("2 - Jouer Labyrinthe 2\n");
-		printf("3 - Quitter :(\n");
-		
-		scanf("%d", &Choix_User);
-	}
+	system("clear");
+	printf("======== Ultimate Maze Runner ========\n");
 
-	switch (Choix_User)
+	int Result_Button_Hit = -1;
+	Point Pos_Clic = {-1, -1};
+	
+	Afficher_Bouton(MENU_PRINCIPAL, List_Bouton);
+	actualiser();
+	
+	while (Result_Button_Hit == -1)
 	{
-		
+		Pos_Clic = attendre_clic();
+		Result_Button_Hit = isButtonHit(MENU_PRINCIPAL, List_Bouton, Pos_Clic);
+	}
+	
+	switch (Result_Button_Hit)
+	{
+		case 0:
+			return 0;
+			break;
 		case 1:
 			charge_labyrinthe("./maze", tab);
-	   	    return 1;
-			break;	
-		case 2:
-			charge_labyrinthe("./maze2", tab);
 			return 1;
 			break;
-		case 3:
+		case 2:
 			return 0;
 			break;
 	}
-	
-	return 0;
-		
+			
+	return 1; 
 }
 
-int Check_Win(Joueur J1, Joueur J2)
+int Check_Win(Joueur J1, Joueur J2) //Regarde quel joueur a gagné / Retourne 1 si le joueur 1 a gagné et 2 si le joueur 2 a gagné
 {
 	if (((J1.Pos.x != J1.Sortie.x) || (J1.Pos.y != J1.Sortie.y)) && ((J2.Pos.x != J2.Sortie.x) || (J2.Pos.y != J2.Sortie.y)))
 		return 0;
@@ -452,30 +378,84 @@ int Check_Win(Joueur J1, Joueur J2)
 }
 
 
-void Win(int isJ1)
+void Win(int isJ1, Bouton Liste_Bouton[NBR_BTN]) //Affiche la victoire d'un des deux joueurs
 {
 
+	int Result_Button_Hit = -1;
+	
 	Point Pos_Texte = {100, 100};
-
+	Point Pos_Clic = {-1, -1};
+	
 	if (isJ1)
 		afficher_texte("Le joueur 1 a gagné !", 24, Pos_Texte, blanc);
 	else
 		afficher_texte("Le joueur 2 a gagné !", 24, Pos_Texte, blanc);
-
+	
+	Afficher_Bouton(JEU, Liste_Bouton);
+	
 	actualiser();
 	
-	attendre_clic();
+	while (Result_Button_Hit == -1)
+	{
+		Pos_Clic = attendre_clic();
+		Result_Button_Hit = isButtonHit(MENU_PRINCIPAL, Liste_Bouton, Pos_Clic);
+	}
+	
+	switch (Result_Button_Hit)
+	{
+		case 3:
+			break;
+	}
 	
 }
 
-void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Joueur)
+
+void Deplacement(char tab[LIG][COL], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1) /* Fais déplacer le joueur dans le tableau du labyrinthe si il n'y pas de collision avec un mur */
+{
+	
+	Tableau Tableau_Temp = {0, 0};
+	char Char_Temp = ' ';
+	
+	Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement);
+
+	Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne];
+
+	if (Char_Temp != '*')
+	{
+		if (Direction == HAUT)
+	 		Joueur -> Pos.y -= Espacement;
+		else if (Direction == BAS)
+			 Joueur -> Pos.y += Espacement;
+		else if (Direction == GAUCHE)
+			 Joueur -> Pos.x -= Espacement;
+		else if (Direction == DROITE)
+			 Joueur -> Pos.x += Espacement;
+			 
+		if (isJ1)
+			Check_And_Change_Letter(tab, 1, 0, *Joueur);
+		else
+			Check_And_Change_Letter(tab, 0, 0, *Joueur);
+			
+	 	Joueur -> Pos_Tab = Tableau_Temp;
+		
+		if (isJ1)
+			Check_And_Change_Letter(tab, 1, 1, *Joueur);
+		else
+			Check_And_Change_Letter(tab, 0, 1, *Joueur);
+
+	}
+
+}
+
+
+void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Joueur) /* On regarde s'il n'y pas collision entre les 2 joueurs dans le tableau du lab */
 {
 	if (isJ1 && !Phase2)
 	{
 		 if (tab[Joueur.Pos_Tab.Ligne][Joueur.Pos_Tab.Colonne] == 'T')
  			tab[Joueur.Pos_Tab.Ligne][Joueur.Pos_Tab.Colonne] = 'K';
  		 else
- 			tab[Joueur.Pos_Tab.Ligne][Joueur.Pos_Tab.Colonne] = ' ';	
+ 			tab[Joueur.Pos_Tab.Ligne][Joueur.Pos_Tab.Colonne] = ' ';
 	}
 	else if (isJ1 && Phase2)
 	{
@@ -500,7 +480,7 @@ void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Jo
 	}
 }
 
-Point Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacement)
+Point Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacement) //Raffraichit le labyrinthe
 {
 
 	int i, l, c;
@@ -566,7 +546,7 @@ Point Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacemen
 	
 }
 
-Tableau Get_Tab_Pos_By_Pos(char tab[LIG][COL], Point Pos, int Espacement)
+Tableau Get_Tab_Pos_By_Pos(char tab[LIG][COL], Point Pos, int Espacement) //Renvoit une coordonnée sur le tableau en fonction d'un point graphique
 {
 	int i, l, c;
 	Point Coin = {0, 0};
@@ -602,4 +582,118 @@ Tableau Get_Tab_Pos_By_Pos(char tab[LIG][COL], Point Pos, int Espacement)
 	}
 	
 	return Pos_J;
+}
+
+void Afficher_Bouton(Type_Bouton TypeBouton, Bouton Liste_Bouton[NBR_BTN]) //Affiche les boutons d'un type spécifié
+{
+	int i;
+	
+	for (i=0; i<NBR_BTN; i++)
+	{
+		if (Liste_Bouton[i].Type_Bouton == TypeBouton)
+		{
+			if (Liste_Bouton[i].Image[0] != '\0')
+			{	
+				//afficher_image(Liste_Bouton[i].Image, Liste_Bouton[i].Pos_HautG);
+			}
+			else
+			{
+			
+				dessiner_rectangle(Liste_Bouton[i].Pos_HautG, mon_abs(Liste_Bouton[i].Pos_HautG.x - Liste_Bouton[i].Pos_BasD.x), mon_abs(Liste_Bouton[i].Pos_HautG.y - Liste_Bouton[i].Pos_BasD.y), white);
+				if (Liste_Bouton[i].Texte[0] != '\0')
+					afficher_texte(Liste_Bouton[i].Texte, 30, Liste_Bouton[i].Pos_HautG, black);
+
+			}
+
+		}
+	}
+	
+}
+
+int isButtonHit(Type_Bouton TypeBouton, Bouton Liste_Bouton[NBR_BTN], Point Pos_Clic)
+{
+	int i;
+	
+	for (i=0; i<NBR_BTN; i++)
+	{
+		if (Liste_Bouton[i].Type_Bouton == TypeBouton)
+		{
+			if (Pos_Clic.x >= Liste_Bouton[i].Pos_HautG.x && Pos_Clic.x <= Liste_Bouton[i].Pos_BasD.x && Pos_Clic.y >= Liste_Bouton[i].Pos_HautG.y && Pos_Clic.y <= Liste_Bouton[i].Pos_BasD.y)
+			{
+				return i;
+			}
+		}
+	}
+	
+	return -1;
+		
+}
+
+void Add_Buttons(Bouton Liste_Bouton[NBR_BTN])
+{
+
+
+	/* ======== Boutons du menu principal ======== */
+	
+	//Bouton Quitter
+	Liste_Bouton[0].Type_Bouton = MENU_PRINCIPAL;
+	Liste_Bouton[0].Pos_HautG.x = 100;
+	Liste_Bouton[0].Pos_HautG.y = 100;
+	Liste_Bouton[0].Pos_BasD.x = 300;
+	Liste_Bouton[0].Pos_BasD.y = 150;
+	Liste_Bouton[0].Texte = "Quitter";
+	Liste_Bouton[0].Image = "";
+	
+	//Bouton Jouer
+	Liste_Bouton[1].Type_Bouton = MENU_PRINCIPAL;
+	Liste_Bouton[1].Pos_HautG.x = 350;
+	Liste_Bouton[1].Pos_HautG.y = 100;
+	Liste_Bouton[1].Pos_BasD.x = 550;
+	Liste_Bouton[1].Pos_BasD.y = 150;
+	Liste_Bouton[1].Texte = "Jouer";
+	Liste_Bouton[1].Image = "";
+	
+	//Bouton Options
+	Liste_Bouton[2].Type_Bouton = MENU_PRINCIPAL;
+	Liste_Bouton[2].Pos_HautG.x = 600;
+	Liste_Bouton[2].Pos_HautG.y = 100;
+	Liste_Bouton[2].Pos_BasD.x = 800;
+	Liste_Bouton[2].Pos_BasD.y = 150;
+	Liste_Bouton[2].Texte = "Options";
+	Liste_Bouton[2].Image = "";
+	
+	/* ======== Boutons en jeu ======== */
+	
+	Liste_Bouton[3].Type_Bouton = JEU;
+	Liste_Bouton[3].Pos_HautG.x = 600;
+	Liste_Bouton[3].Pos_HautG.y = 100;
+	Liste_Bouton[3].Pos_BasD.x = 800;
+	Liste_Bouton[3].Pos_BasD.y = 150;
+	Liste_Bouton[3].Texte = "Quitter";
+	Liste_Bouton[3].Image = "";
+	
+}
+
+int mon_abs(int a)
+{
+	if (a > 0)
+		return a;
+	else
+		return -a;
+}
+
+int min(int a, int b)
+{
+	if (a > b)
+		return b;
+	else if (a == b)
+		return b;
+	else
+		return a;
+}
+
+void Clear_Screen() 
+{
+	Point Origin = {0, 0};
+	dessiner_rectangle(Origin, FEN_X, FEN_Y, black);
 }
