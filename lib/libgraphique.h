@@ -16,7 +16,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //0. Directive préprocesseur
 #include <SDL/SDL.h>
-#include<SDL/SDL_ttf.h>
+#include <SDL/SDL_ttf.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,10 +25,10 @@ typedef Uint32 Couleur;
 typedef struct {int x,y;} Point;
 typedef struct {
     int touches[SDLK_LAST] ;
-    int sourisx ;
-    int sourisy ;
-    int boutong ;
-    int boutond ;
+    int sourisx;
+    int sourisy;
+    int boutong;
+    int boutond;
 } Trace_evts ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,9 +148,10 @@ void attente(int duree_ms);
 Couleur couleur_point(Point p);
 
 //renvoie un entier au hasard entre 0 et n-1
-int entier_aleatoire(int n) ;
+int entier_aleatoire(int n);
 
-
+//Change le titre de la fenêtre
+void Set_Window_Title(char* Title);
 
 //CouleurS ///////////////////////
 // 16 couleurs de base en francais
@@ -315,5 +316,6 @@ int entier_aleatoire(int n) ;
 #define whitesmoke           0xF5F5F5
 #define yellow               0xFFFF00
 #define yellowgreen          0x9ACD32
+
 
 

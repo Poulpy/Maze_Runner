@@ -327,6 +327,7 @@ void traiter_evenements(void)
 
     while(SDL_PollEvent(&lastevent))
     {
+    	_test_arret();
         switch(lastevent.type)
         {
             case SDL_MOUSEMOTION:
@@ -335,7 +336,7 @@ void traiter_evenements(void)
                 break;
             case SDL_KEYDOWN:
                 trace_evts.touches[lastevent.key.keysym.sym]=1 ;
-                break ;
+                break;
             case SDL_MOUSEBUTTONDOWN:
                 dernier_clic.x = lastevent.motion.x ;
                 dernier_clic.y = lastevent.motion.y ;
@@ -464,3 +465,10 @@ int entier_aleatoire(int n)
     return rand() % n ;
 }
 
+void Set_Window_Title(char* Title)
+{
+	if (Title[0] != '\0')
+	{
+		SDL_WM_SetCaption(Title, NULL);
+	}
+}
