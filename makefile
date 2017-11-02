@@ -1,7 +1,7 @@
 #changer le nom des deux lignes suivantes si nécessaire
 SOURCE = main.c
 OUTPUT = resultat
-LIB = -lm -lSDL -lSDL_ttf
+LIB = -lm -lSDL -lSDL_ttf -lSDL_mixer
 OPT = -Wall -g
 
 
