@@ -293,7 +293,7 @@ Point attendre_clic_gauche_droite() {
     }
     while (lastevent.type != SDL_MOUSEBUTTONDOWN) ;
     Point p ;
-    if (lastevent.button.button==SDL_BUTTON_RIGHT)
+    if (lastevent.button.button == SDL_BUTTON_RIGHT)
     {
         p.x = - lastevent.button.x ;
         p.y = - lastevent.button.y ;
