@@ -60,6 +60,7 @@ typedef struct Recompense {
 
 //Fonctions d'affichage
 Sortie Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacement);
+void Refresh_Maze_Editeur(char tab[][72], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement);
 void Clear_Screen();
 void Quadrillage(Point Start, Point End);
 
@@ -83,7 +84,9 @@ void Afficher_Bouton(Type_Bouton TypeBouton, Bouton Liste_Bouton[NBR_BTN]);
 void Add_Buttons(Bouton Liste_Bouton[NBR_BTN]);
 
 //Autres fonctions utiles
-void Set_Char_Tab_By_Pos(char tab[60][60], Point Pos, char Char, int Espacement);
+void Set_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, char Char, int nbr_Lignes, int nbr_Colonnes, int Espacement);
+char Get_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, int nbr_Lignes, int nbr_Colonnes, int Espacement);
+void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Colonnes);
 int min(int a, int b);
 int mon_abs(int a);
 char* Convert_To_String(int i);
@@ -479,16 +482,17 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 {
 	int Result_Button_Hit = -1, Largeur = 2, Hauteur = 1;
 	
-	Point Pos_Clic = {-1, -1}, Pos_Texte_HL = {59, 108};
-	Point LigneH_P1 = {0, 0}, LigneH_P2 = {0, 0};
-	Point LigneL = {LigneH_P2.x + (Largeur * Espacement), LigneH_P1.y};
+	Point Pos_Clic = {-1, -1};
+	
+	Point Pos_Texte_HL = {59, 108};
+	Point LigneH_P1 = {0, 0}, LigneH_P2 = {0, 0}, LigneL = {LigneH_P2.x + (Largeur * Espacement), LigneH_P1.y};
 	
 	char Texte_Fixe[12] = "Largeur : "; //Contient "Longueur : " ou "Largeur : "
 	char* Texte_Variable = Convert_To_String(Largeur); //Contient la longueur ou la largeur
 	
 	int isRightClick = 0;
 	
-	char Tab[64][72]; //Tableau qui contiendra le lab
+	char Tab[64][72] = {{' '}}; //Tableau qui contiendra le lab
 	
 	while (1)
 	{
@@ -497,6 +501,12 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 		/* ======== Affichage de l'interface (Boutons) ======== */
 		
 		Afficher_Bouton(EDITEUR, Liste_Bouton); //On affiche les boutons
+		
+		//Texte d'explication fixe
+		
+		
+		
+		//Texte Largeur et Hauteur
 		 
 		afficher_texte(Texte_Fixe,  20, Pos_Texte_HL, white); //On affiche : "Largeur : "
 		
@@ -551,6 +561,14 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 		//printf("LigneH_P1.x : %d / LigneH_P2.x : %d\n", LigneH_P1.x, LigneH_P2.x);
 		dessiner_ligne(LigneH_P1, LigneH_P2, white);
 		
+		Liste_Bouton[15].Pos_HautG.x += 1;
+		Liste_Bouton[15].Pos_HautG.y += 1;
+		
+		Refresh_Maze_Editeur(Tab, Liste_Bouton[15].Pos_HautG, Largeur * 2, Hauteur, Espacement);
+		
+		Liste_Bouton[15].Pos_HautG.x -= 1;
+		Liste_Bouton[15].Pos_HautG.y -= 1;
+		
 		Quadrillage(Liste_Bouton[15].Pos_HautG, Liste_Bouton[15].Pos_BasD);
 		
 		actualiser();
@@ -559,18 +577,20 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 		{
 			Pos_Clic = attendre_clic_gauche_droite();
 			
-			if (Pos_Clic.x <= 0)
+			if (Pos_Clic.x <= 0) //On regarde si le clic est un clic droit
 				isRightClick = 1;
 			
-			printf("X : %d / Y : %d\n", Pos_Clic.x, Pos_Clic.y);
+			//printf("X : %d / Y : %d\n", Pos_Clic.x, Pos_Clic.y);
 			
+			//On récupére les coordonnées positives du clic
 			Pos_Clic.x = mon_abs(Pos_Clic.x);
 			Pos_Clic.y = mon_abs(Pos_Clic.y);
 			
+			//On regarde si un bouton est cliqué
 			Result_Button_Hit = isButtonHit(EDITEUR, Liste_Bouton, Pos_Clic);
 		}
 		
-		switch (Result_Button_Hit)
+		switch (Result_Button_Hit) //On regarde quel bouton est cliqué
 		{
 			case 9: //Retour au menu options
 				return 0;
@@ -592,28 +612,38 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 					Hauteur -= 1;
 				break;
 			case 14: // Sauvegarder et quitter
+				Save_Tab_To_File(Tab, "./Data/Maze/Custom_Maze", Largeur * 2, Hauteur);
+				return 0;
 				break;
 			case 15:
 				
-				if (isRightClick)
+				//On ajuste les coordonnées pour avoir le coin supérieur gauche
+				Pos_Clic.x = Pos_Clic.x - (Pos_Clic.x % Espacement);
+				Pos_Clic.y = Pos_Clic.y - (Pos_Clic.y % Espacement);
+				
+				//On observe quel est le caractère actuellement présent où l'on a cliqué
+				char Char_Tab = Get_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, Largeur * 2, Hauteur, Espacement);
+				
+				if (isRightClick) //Si c'est un clic droit
 				{
-					Tableau Pos_Tab = Get_Tab_Pos_By_Pos(Tab, Pos_Clic, Espacement);
-					if (Tab[Pos_Tab.Ligne][Pos_Tab.Colonne] == '*')
-						printf("Clic droit \n");
+					if (Char_Tab == 'S') //Si le caractère est une sortie alors un met un mur
+						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Largeur * 2, Hauteur, Espacement);
+					else //Sinon on met du vide
+						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, ' ', Largeur * 2, Hauteur, Espacement);
 				}
-				else
+				else //Si c'est un clic gauche
 				{
-					Pos_Clic.x = Pos_Clic.x - (Pos_Clic.x % Espacement);
-					Pos_Clic.y = Pos_Clic.y - (Pos_Clic.y % Espacement);
-					
-					dessiner_rectangle(Pos_Clic, Espacement, Espacement, red);
-					
-					Set_Char_Tab_By_Pos(Tab, Pos_Clic, '*', Espacement);
+					if (Char_Tab == '*') //Si le caractère est un mur alors on met une sortie
+						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, 'S', Largeur * 2, Hauteur, Espacement);
+					else //Sinon on met un mur
+						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Largeur * 2, Hauteur, Espacement);
+
 				}
 				
 				break;
 		}
 		
+		//On remet les variables à leur état initial
 		isRightClick = 0;
 		Result_Button_Hit = -1;
 		Pos_Clic.x = -1;
@@ -812,6 +842,63 @@ Sortie Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espaceme
 	
 }
 
+void Refresh_Maze_Editeur(char tab[][72], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement) //Raffraichit le labyrinthe
+{
+
+	int l, c;
+	Point Coin = {Pos_Start.x, Pos_Start.y};
+	
+	for(l=0; l!=nbr_Lignes; l++)
+	{
+		for(c=0; c!=nbr_Colonnes; c++)
+		{
+			//printf("Check tab[%d][%d] who have : %c !\n", l, c, tab[l][c]) ;
+			if (tab[l][c] == '*')
+				afficher_image("./Data/Pictures/Brique.bmp", Coin);
+			else if (tab[l][c] == 'S')
+				afficher_image("./Data/Pictures/Sortie.bmp", Coin);
+			else if (tab[l][c] == ' ')
+				dessiner_rectangle(Coin, Espacement, Espacement, black);
+				
+			Coin.y += Espacement;
+				
+			//printf("%c",tab[l][c]);
+		}
+		
+		Coin.y = Pos_Start.y;
+		Coin.x += Espacement;
+		//printf("\n");
+	}
+}
+
+void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Colonnes)
+{
+	int l, c;
+	FILE* fichier = NULL;
+	
+	fichier = fopen(FileName, "w");
+	
+	if (fichier != NULL)
+	{
+		fprintf(fichier, "%d %d\n", nbr_Lignes, nbr_Colonnes); //On écrit le nombre de lignes et de colonnes
+		
+		for(l=0; l!=nbr_Lignes; l++)
+		{
+			for(c=0; c!=nbr_Colonnes; c++)
+			{
+				if (Tab[l][c] == ' ' || Tab[l][c] == '*' || Tab[l][c] == 'S')
+					fputc(Tab[l][c], fichier);
+				else
+					fputc(' ', fichier);
+			}
+			
+			fputc('\n', fichier);
+		}
+		
+		fclose(fichier);
+	}
+}
+
 Tableau Get_Tab_Pos_By_Pos(char tab[][60], Point Pos, int Espacement) //Renvoit une coordonnée sur le tableau en fonction d'un point graphique
 {
 	int i, l, c;
@@ -850,36 +937,57 @@ Tableau Get_Tab_Pos_By_Pos(char tab[][60], Point Pos, int Espacement) //Renvoit 
 	return Pos_J;
 }
 
-void Set_Char_Tab_By_Pos(char tab[][60], Point Pos, char Char, int Espacement)
+char Get_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, int nbr_Lignes, int nbr_Colonnes, int Espacement)
 {
-	int i, l, c;
-	Point Coin = {0, 0};
+	int l, c;
+	Point Coin = {Pos_Start.x, Pos_Start.y};
 	
-	for(i=0; i < 2; i++)
+	for(l=0; l!=nbr_Lignes; l++)
 	{
-		for(l=0; l!=LIG; l++)
+		for(c=0; c!=nbr_Colonnes; c++)
 		{
-			for(c=0; c!=COL; c++)
+			//printf("Check : tab[%d][%d] with Coin.x = %d / Coin.y = %d and Pos.x = %d / Pos.y = %d\n", l, c, Coin.x, Coin.y, Pos.x, Pos.y);
+			
+			if (Coin.x + 2 == Pos.x && Coin.y == Pos.y)
 			{
-				if (Coin.x == Pos.x && Coin.y == Pos.y)
-				{
-					tab[l][c] = Char;
-			}
-				
-				Coin.x += Espacement;
+				return tab[l][c];
 			}
 			
-			if (i == 0)
-				Coin.x = 0;
-			else
-				Coin.x = 600;
-				
 			Coin.y += Espacement;
 		}
 		
-		Coin.y = 0;
-		Coin.x = 600;
+		Coin.y = Pos_Start.y;
+		Coin.x += Espacement;
+	}
 	
+	return ' ';
+	
+}
+
+void Set_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, char Char, int nbr_Lignes, int nbr_Colonnes, int Espacement)
+{
+	int l, c;
+	Point Coin = {Pos_Start.x, Pos_Start.y};
+	
+	for(l=0; l!=nbr_Lignes; l++)
+	{
+		for(c=0; c!=nbr_Colonnes; c++)
+		{
+			//printf("Check : tab[%d][%d] with Coin.x = %d / Coin.y = %d and Pos.x = %d / Pos.y = %d\n", l, c, Coin.x, Coin.y, Pos.x, Pos.y);
+			
+			if (Coin.x + 2 == Pos.x && Coin.y == Pos.y)
+			{
+				//printf("Char set !\n");
+				//printf("Before : %c\n", tab[l][c]);
+				tab[l][c] = Char;
+				//printf("After : %c\n", tab[l][c]);
+			}
+			
+			Coin.y += Espacement;
+		}
+		
+		Coin.y = Pos_Start.y;
+		Coin.x += Espacement;
 	}
 	
 }
