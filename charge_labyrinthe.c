@@ -7,10 +7,11 @@
 
 int lig, col;
 
-void charge_labyrinthe(char *fic, char tab[LIG][COL])
+SizeTab charge_labyrinthe(char *fic, char tab[LIG][COL])
 {
     
     FILE *f = fopen(fic,"r"); // descripteur de fichier
+    SizeTab Size;
     
     int l, c, nbrSorties;
     char car;
@@ -24,6 +25,9 @@ void charge_labyrinthe(char *fic, char tab[LIG][COL])
     }
 
     fscanf(f,"%d %d %d\n",&lig,&col, &nbrSorties); // lecture des lignes et colonnes en en-tête
+    
+    Size.nbr_Lignes = lig;
+    Size.nbr_Colonnes = col;
     
     /* if(lig!=LIG || col != COL) // si différent des valeurs de charge_labyrinthe.h
     {
@@ -58,15 +62,7 @@ void charge_labyrinthe(char *fic, char tab[LIG][COL])
     
     fclose(f); // fermeture du descripteur de fichier
     printf("charge_labyrinthe: terminé\n");
-}
-
-int Get_Lab_Ligne()
-{
-	return lig;
-}
-
-int Get_Lab_Colonne()
-{
-	return col;
+    
+    return Size;
 }
 

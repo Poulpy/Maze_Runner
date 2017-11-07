@@ -56,22 +56,29 @@ typedef struct Recompense {
 	int Status;
 } Recompense;
 
+/* ======== Variables globales ======== */
+
+Mix_Music *Musique; //Création d'un pointeur de type Mix_Music
+int Espacement = 13;
+int nbr_Lignes = LIG;
+int nbr_Colonnes = COL;
+
 /* ======== Définitions des prototypes de fonctions ======== */
 
 //Fonctions d'affichage
-Sortie Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacement);
+Sortie Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_J2, int Espacement);
 void Refresh_Maze_Editeur(char tab[][72], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement);
 void Clear_Screen();
 void Quadrillage(Point Start, Point End);
 
 //Fonctions des menus
-int Main_Menu(char tab[LIG][COL], Bouton Liste_Bouton[NBR_BTN]);
+int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]);
 int Options(Bouton Liste_Bouton[NBR_BTN]);
 int Editeur(Bouton Liste_Bouton[NBR_BTN]);
 
 //Fonctions de déplacement
-void Deplacement(char tab[LIG][COL], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1);
-void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Joueur);
+void Deplacement(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1);
+void Check_And_Change_Letter(char tab[nbr_Lignes][nbr_Colonnes], int isJ1, int Phase2, Joueur Joueur);
 Tableau Get_Tab_Pos_By_Pos(char tab[][60], Point Pos, int Espacement);
 
 //Fonctions lors de la victoire
@@ -86,15 +93,10 @@ void Add_Buttons(Bouton Liste_Bouton[NBR_BTN]);
 //Autres fonctions utiles
 void Set_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, char Char, int nbr_Lignes, int nbr_Colonnes, int Espacement);
 char Get_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, int nbr_Lignes, int nbr_Colonnes, int Espacement);
-void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Colonnes);
+void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Colonnes, int nbr_Sorties);
 int min(int a, int b);
 int mon_abs(int a);
 char* Convert_To_String(int i);
-
-/* ======== Variables globales ======== */
-
-Mix_Music *Musique; //Création d'un pointeur de type Mix_Music
-int Espacement = 13;
 
 /* ======== Main ======== */
 
@@ -102,6 +104,7 @@ int main(int argc, char *argv[])
 {
 
 	int MainStatus = 0; //Le status que l'on veut pour la boucle principale (Rejouer/Menu/Quitter)
+	//int i;
 	
 	if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1) //Initialisation de SDL Mixer pour les musiques/son
 		printf("%s", Mix_GetError());
@@ -110,13 +113,17 @@ int main(int argc, char *argv[])
 	{
 		/* ======== Initialisation des variables ======== */
 
-		char tab[LIG][COL]; //Tableau contentant le labyrinthe
+		char tab[nbr_Lignes][nbr_Colonnes]; //Tableau contentant le labyrinthe
 		
-		Bouton Liste_Boutons[NBR_BTN]; //Tableau contenant les différents boutons des différents menus
-		
-		int col, lig; 
-		int maze_col = 63, maze_lig = 45;
+		//char **tab;
 
+		//tab = (char **) malloc(nbr_Lignes * sizeof(char *));
+
+		//for(i=0;i<nbr_Lignes;i++)
+		//	tab[i] = (char *) malloc(nbr_Colonnes * sizeof(char));
+			
+		Bouton Liste_Boutons[NBR_BTN]; //Tableau contenant les différents boutons des différents menus
+		int col, lig; 
 		int isJ1Win = 0;
 		
 		//Variables de la boucle de mouvement
@@ -152,13 +159,13 @@ int main(int argc, char *argv[])
 		do
 		{
 		 	
-			col = entier_aleatoire(maze_col); //emplacement verticale
-			lig = entier_aleatoire(maze_lig); //emplacement horizontale
+			col = entier_aleatoire(nbr_Colonnes); //emplacement verticale
+			lig = entier_aleatoire(nbr_Lignes); //emplacement horizontale
 			
 			while (tab[lig][col] == '*' || tab[lig][col] == 'S')
 			{
-				col = entier_aleatoire(maze_col);
-				lig = entier_aleatoire(maze_lig);
+				col = entier_aleatoire(nbr_Colonnes);
+				lig = entier_aleatoire(nbr_Lignes);
 			}
 			
 			tab[lig][col]= 'T';
@@ -169,7 +176,7 @@ int main(int argc, char *argv[])
 			J2.Pos.x = J1.Pos.x + 600;
 			J2.Pos.y = J1.Pos.y;
 		 	
-		} while ((J1.Pos.x > (maze_lig * Espacement) + 2) || (J1.Pos.y > (maze_col * Espacement) + 2));
+		} while ((J1.Pos.x > (nbr_Lignes * Espacement) + 2) || (J1.Pos.y > (nbr_Colonnes * Espacement) + 2));
 		
 		/* On configure la position des 2 joueurs ainsi que celle de leur sortie */
 		
@@ -395,7 +402,7 @@ int main(int argc, char *argv[])
 
 /* ======== Fonctions ======== */
 
-int Main_Menu(char tab[LIG][COL], Bouton Liste_Bouton[NBR_BTN]) //Affiche le menu principal
+int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]) //Affiche le menu principal
 {
 
 	system("clear");
@@ -403,6 +410,7 @@ int Main_Menu(char tab[LIG][COL], Bouton Liste_Bouton[NBR_BTN]) //Affiche le men
 	
 	int Result_Button_Hit = -1;
 	Point Pos_Clic = {-1, -1}, Pos_Menu = {200, 50};
+	SizeTab Taille_Tab;
 	
 	Musique = Mix_LoadMUS("./Data/Music/Main_Menu.mp3"); //On charge la musique du menu
 	Mix_PlayMusic(Musique, -1); //On la joue indéfiniement
@@ -430,9 +438,16 @@ int Main_Menu(char tab[LIG][COL], Bouton Liste_Bouton[NBR_BTN]) //Affiche le men
 				return 0;
 				break;
 			case 1:
-				charge_labyrinthe("./Data/Maze/maze", tab);
+			
+				Taille_Tab = charge_labyrinthe("./Data/Maze/Custom_Maze", tab);
+				
+				nbr_Colonnes =  Taille_Tab.nbr_Colonnes;
+				nbr_Lignes = Taille_Tab.nbr_Lignes;
+				
 				return 1;
+				
 				break;
+				
 			case 2:	
 				Options(Liste_Bouton);
 				break;
@@ -490,7 +505,7 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 	char Texte_Fixe[12] = "Largeur : "; //Contient "Longueur : " ou "Largeur : "
 	char* Texte_Variable = Convert_To_String(Largeur); //Contient la longueur ou la largeur
 	
-	int isRightClick = 0;
+	int isRightClick = 0, nbr_Sorties = 0;
 	
 	char Tab[64][72] = {{' '}}; //Tableau qui contiendra le lab
 	
@@ -612,7 +627,7 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 					Hauteur -= 1;
 				break;
 			case 14: // Sauvegarder et quitter
-				Save_Tab_To_File(Tab, "./Data/Maze/Custom_Maze", Largeur * 2, Hauteur);
+				Save_Tab_To_File(Tab, "./Data/Maze/Custom_Maze", Largeur * 2, Hauteur, nbr_Sorties);
 				return 0;
 				break;
 			case 15:
@@ -627,14 +642,20 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 				if (isRightClick) //Si c'est un clic droit
 				{
 					if (Char_Tab == 'S') //Si le caractère est une sortie alors un met un mur
+					{
 						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Largeur * 2, Hauteur, Espacement);
+						nbr_Sorties -= 1;
+					}
 					else //Sinon on met du vide
 						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, ' ', Largeur * 2, Hauteur, Espacement);
 				}
 				else //Si c'est un clic gauche
 				{
 					if (Char_Tab == '*') //Si le caractère est un mur alors on met une sortie
+					{
 						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, 'S', Largeur * 2, Hauteur, Espacement);
+						nbr_Sorties += 1;
+					}
 					else //Sinon on met un mur
 						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Largeur * 2, Hauteur, Espacement);
 
@@ -702,7 +723,7 @@ int Win(int playerWin, Bouton Liste_Bouton[NBR_BTN]) //Affiche la victoire d'un 
 }
 
 
-void Deplacement(char tab[LIG][COL], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1) /* Fais déplacer le joueur dans le tableau du labyrinthe si il n'y pas de collision avec un mur */
+void Deplacement(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1) /* Fais déplacer le joueur dans le tableau du labyrinthe si il n'y pas de collision avec un mur */
 {
 	
 	Tableau Tableau_Temp = {0, 0};
@@ -739,7 +760,7 @@ void Deplacement(char tab[LIG][COL], Point Pos_Temp, Joueur *Joueur, int Espacem
 
 }
 
-void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Joueur) /* On regarde s'il n'y pas collision entre les 2 joueurs dans le tableau du lab */
+void Check_And_Change_Letter(char tab[nbr_Lignes][nbr_Colonnes], int isJ1, int Phase2, Joueur Joueur) /* On regarde s'il n'y pas collision entre les 2 joueurs dans le tableau du lab */
 {
 	if (isJ1 && !Phase2)
 	{
@@ -771,7 +792,7 @@ void Check_And_Change_Letter(char tab[LIG][COL], int isJ1, int Phase2, Joueur Jo
 	}
 }
 
-Sortie Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espacement) //Raffraichit le labyrinthe
+Sortie Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_J2, int Espacement) //Raffraichit le labyrinthe
 {
 
 	int i, l, c;
@@ -780,9 +801,9 @@ Sortie Refresh_Maze(char tab[LIG][COL], Point Pos_J1, Point Pos_J2, int Espaceme
 	
 	for(i=0; i < 2; i++)
 	{
-		for(l=0; l!=LIG; l++)
+		for(l=0; l!=nbr_Lignes; l++)
     	{
-			for(c=0; c!=COL; c++)
+			for(c=0; c!=nbr_Colonnes; c++)
 		   	{
 		  
 		   		if (tab[l][c] == '*')
@@ -871,7 +892,7 @@ void Refresh_Maze_Editeur(char tab[][72], Point Pos_Start, int nbr_Lignes, int n
 	}
 }
 
-void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Colonnes)
+void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Colonnes, int nbr_Sorties)
 {
 	int l, c;
 	FILE* fichier = NULL;
@@ -880,7 +901,7 @@ void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Co
 	
 	if (fichier != NULL)
 	{
-		fprintf(fichier, "%d %d\n", nbr_Lignes, nbr_Colonnes); //On écrit le nombre de lignes et de colonnes
+		fprintf(fichier, "%d %d %d\n", nbr_Lignes, nbr_Colonnes, nbr_Sorties); //On écrit le nombre de lignes et de colonnes
 		
 		for(l=0; l!=nbr_Lignes; l++)
 		{
@@ -907,9 +928,9 @@ Tableau Get_Tab_Pos_By_Pos(char tab[][60], Point Pos, int Espacement) //Renvoit 
 	
 	for(i=0; i < 2; i++)
 	{
-		for(l=0; l!=LIG; l++)
+		for(l=0; l!=nbr_Lignes; l++)
     	{ 
-			for(c=0; c!=COL; c++)
+			for(c=0; c!=nbr_Colonnes; c++)
 		   	{
 		   		if (Coin.x == Pos.x && Coin.y == Pos.y)
 		   		{
