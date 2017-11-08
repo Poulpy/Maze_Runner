@@ -20,6 +20,6 @@ typedef struct SizeTab {
 // Charge dans le tableau tab le labyrinthe du fichier f.
 // Ce fichier doit contenir les dimensions du labyrinthe sur la 1ère ligne:
 // NB_LIGNES puis NB COLONNES
-SizeTab charge_labyrinthe(char *f, char tab[][100]);
+SizeTab charge_labyrinthe(char *f, char tab[LIG][COL]);
 int Get_Lab_Ligne();
 int Get_Lab_Colonne();

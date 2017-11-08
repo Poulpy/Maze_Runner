@@ -4,11 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define COTE 10
 #define FEN_X 1190
 #define FEN_Y 950
 #define BUILD_AUDIO 1
-#define NBR_BTN 16
+#define NBR_BTN 17
 
 /* ======== Définitions des structures ======== */
 
@@ -63,8 +62,8 @@ Mix_Music *Musique; //Création d'un pointeur de type Mix_Music
 #endif
 
 int Espacement = 13;
-int nbr_Lignes = 1;
-int nbr_Colonnes = 1;
+int nbr_Lignes = LIG;
+int nbr_Colonnes = COL;
 
 /* ======== Définitions des prototypes de fonctions ======== */
 
@@ -75,7 +74,7 @@ void Clear_Screen();
 void Quadrillage(Point Start, Point End);
 
 //Fonctions des menus
-int Main_Menu(char tab[][100], Bouton Liste_Bouton[NBR_BTN]);
+int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]);
 int Options(Bouton Liste_Bouton[NBR_BTN]);
 int Editeur(Bouton Liste_Bouton[NBR_BTN]);
 
@@ -114,20 +113,16 @@ int main(int argc, char *argv[])
 		printf("%s", Mix_GetError());
 	#endif
 	
-	//char **tab;
 
-	//tab = (char **) malloc(nbr_Lignes * sizeof(char *));
-
-	//for(i=0;i<nbr_Lignes;i++)
-		//tab[i] = (char **) malloc(nbr_Colonnes * sizeof(char));
-			
+	
 	while (MainStatus != -1) //Tant que MainStatus != -1 on recommence le programme
 	{
 		/* ======== Initialisation des variables ======== */
 
-		char tab[100][100]; //Tableau contentant le labyrinthe
+		 //Tableau contentant le labyrinthe
+		 
+		char tab[nbr_Lignes][nbr_Colonnes];
 		
-			
 		Bouton Liste_Boutons[NBR_BTN]; //Tableau contenant les différents boutons des différents menus
 		int col, lig; 
 		int isJ1Win = 0;
@@ -412,7 +407,7 @@ int main(int argc, char *argv[])
 
 /* ======== Fonctions ======== */
 
-int Main_Menu(char tab[][100], Bouton Liste_Bouton[NBR_BTN]) //Affiche le menu principal
+int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]) //Affiche le menu principal
 {
 
 	system("clear");
@@ -455,19 +450,6 @@ int Main_Menu(char tab[][100], Bouton Liste_Bouton[NBR_BTN]) //Affiche le menu p
 			
 				nbr_Colonnes = Taille_Tab.nbr_Colonnes;
 				nbr_Lignes = Taille_Tab.nbr_Lignes;
-				
-				/* int add_rows = nbr_Lignes - 1;
-				int **tmp = realloc( tab, sizeof *tab * (nbr_Lignes + add_rows) );
-				
-				if (tmp)
-				{
-						tab = tmp;
-						
-						for ( size_t i = 0; i < add_rows; i++ )
-						{
-							tab[nbr_Lignes + i] = malloc( sizeof *tab[nbr_Lignes + i] * nbr_Colonnes );
-						}
-				} */
 				
 				return 1;
 				

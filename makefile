@@ -7,7 +7,6 @@ OPT = -Wall -g
 SDL_CFLAGS = $(shell sdl-config --cflags)
 SDL_LDFLAGS = $(shell sdl-config --libs)
 
-
 all: $(OUTPUT)
 
 clean: $(OUTPUT)
