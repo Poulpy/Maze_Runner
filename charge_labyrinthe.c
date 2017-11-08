@@ -7,7 +7,7 @@
 
 int lig, col;
 
-SizeTab charge_labyrinthe(char *fic, char tab[LIG][COL])
+SizeTab charge_labyrinthe(char *fic, char tab[][100])
 {
     
     FILE *f = fopen(fic,"r"); // descripteur de fichier

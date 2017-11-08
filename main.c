@@ -7,7 +7,7 @@
 #define COTE 10
 #define FEN_X 1190
 #define FEN_Y 950
-
+#define BUILD_AUDIO 1
 #define NBR_BTN 16
 
 /* ======== Définitions des structures ======== */
@@ -58,10 +58,13 @@ typedef struct Recompense {
 
 /* ======== Variables globales ======== */
 
+#if BUILD_AUDIO
 Mix_Music *Musique; //Création d'un pointeur de type Mix_Music
+#endif
+
 int Espacement = 13;
-int nbr_Lignes = LIG;
-int nbr_Colonnes = COL;
+int nbr_Lignes = 1;
+int nbr_Colonnes = 1;
 
 /* ======== Définitions des prototypes de fonctions ======== */
 
@@ -72,7 +75,7 @@ void Clear_Screen();
 void Quadrillage(Point Start, Point End);
 
 //Fonctions des menus
-int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]);
+int Main_Menu(char tab[][100], Bouton Liste_Bouton[NBR_BTN]);
 int Options(Bouton Liste_Bouton[NBR_BTN]);
 int Editeur(Bouton Liste_Bouton[NBR_BTN]);
 
@@ -106,21 +109,24 @@ int main(int argc, char *argv[])
 	int MainStatus = 0; //Le status que l'on veut pour la boucle principale (Rejouer/Menu/Quitter)
 	//int i;
 	
+	#if BUILD_AUDIO
 	if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1) //Initialisation de SDL Mixer pour les musiques/son
 		printf("%s", Mix_GetError());
+	#endif
 	
+	//char **tab;
+
+	//tab = (char **) malloc(nbr_Lignes * sizeof(char *));
+
+	//for(i=0;i<nbr_Lignes;i++)
+		//tab[i] = (char **) malloc(nbr_Colonnes * sizeof(char));
+			
 	while (MainStatus != -1) //Tant que MainStatus != -1 on recommence le programme
 	{
 		/* ======== Initialisation des variables ======== */
 
-		char tab[nbr_Lignes][nbr_Colonnes]; //Tableau contentant le labyrinthe
+		char tab[100][100]; //Tableau contentant le labyrinthe
 		
-		//char **tab;
-
-		//tab = (char **) malloc(nbr_Lignes * sizeof(char *));
-
-		//for(i=0;i<nbr_Lignes;i++)
-		//	tab[i] = (char *) malloc(nbr_Colonnes * sizeof(char));
 			
 		Bouton Liste_Boutons[NBR_BTN]; //Tableau contenant les différents boutons des différents menus
 		int col, lig; 
@@ -210,9 +216,11 @@ int main(int argc, char *argv[])
 		
 		/* ======== Boucle principale de jeu tant qu'un joueur n'a pas atteint une sortie ======== */
 		
+		#if BUILD_AUDIO
 		Mix_HaltMusic();
 		
 		Mix_PlayMusic(Musique, -1);
+		#endif
 		
 		while (!Check_Win(J1, J2))
 		{
@@ -393,8 +401,10 @@ int main(int argc, char *argv[])
     
     // Fin de la session graphique
     
+   #if BUILD_AUDIO
     Mix_FreeMusic(Musique);
     Mix_CloseAudio();
+    #endif
     
     fermer_fenetre();
     return 0;
@@ -402,7 +412,7 @@ int main(int argc, char *argv[])
 
 /* ======== Fonctions ======== */
 
-int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]) //Affiche le menu principal
+int Main_Menu(char tab[][100], Bouton Liste_Bouton[NBR_BTN]) //Affiche le menu principal
 {
 
 	system("clear");
@@ -412,10 +422,12 @@ int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]) 
 	Point Pos_Clic = {-1, -1}, Pos_Menu = {200, 50};
 	SizeTab Taille_Tab;
 	
+	#if BUILD_AUDIO
 	Musique = Mix_LoadMUS("./Data/Music/Main_Menu.mp3"); //On charge la musique du menu
 	Mix_PlayMusic(Musique, -1); //On la joue indéfiniement
 	
 	Musique = Mix_LoadMUS("./Data/Music/Game.mp3"); //On précharge la musique du jeu
+	#endif
 	
 	while (1)
 	{
@@ -439,10 +451,23 @@ int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]) 
 				break;
 			case 1:
 			
-				Taille_Tab = charge_labyrinthe("./Data/Maze/Custom_Maze", tab);
-				
-				nbr_Colonnes =  Taille_Tab.nbr_Colonnes;
+				Taille_Tab = charge_labyrinthe("./Data/Maze/maze", tab);
+			
+				nbr_Colonnes = Taille_Tab.nbr_Colonnes;
 				nbr_Lignes = Taille_Tab.nbr_Lignes;
+				
+				/* int add_rows = nbr_Lignes - 1;
+				int **tmp = realloc( tab, sizeof *tab * (nbr_Lignes + add_rows) );
+				
+				if (tmp)
+				{
+						tab = tmp;
+						
+						for ( size_t i = 0; i < add_rows; i++ )
+						{
+							tab[nbr_Lignes + i] = malloc( sizeof *tab[nbr_Lignes + i] * nbr_Colonnes );
+						}
+				} */
 				
 				return 1;
 				
