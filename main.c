@@ -6,8 +6,8 @@
 
 #define FEN_X 1190
 #define FEN_Y 950
-#define BUILD_AUDIO 1
-#define NBR_BTN 17
+#define BUILD_AUDIO 0
+#define NBR_BTN 16
 
 /* ======== Définitions des structures ======== */
 
@@ -64,6 +64,8 @@ Mix_Music *Musique; //Création d'un pointeur de type Mix_Music
 int Espacement = 13;
 int nbr_Lignes = LIG;
 int nbr_Colonnes = COL;
+
+char* Path_Lab = "./Data/Maze/maze";
 
 /* ======== Définitions des prototypes de fonctions ======== */
 
@@ -446,7 +448,7 @@ int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]) 
 				break;
 			case 1:
 			
-				Taille_Tab = charge_labyrinthe("./Data/Maze/maze", tab);
+				Taille_Tab = charge_labyrinthe(Path_Lab, tab);
 			
 				nbr_Colonnes = Taille_Tab.nbr_Colonnes;
 				nbr_Lignes = Taille_Tab.nbr_Lignes;
@@ -502,11 +504,11 @@ int Options(Bouton Liste_Bouton[NBR_BTN])
 
 int Editeur(Bouton Liste_Bouton[NBR_BTN])
 {
-	int Result_Button_Hit = -1, Largeur = 2, Hauteur = 1;
+	int Result_Button_Hit = -1, Largeur = 36, Hauteur = 64, c, l;
 	
 	Point Pos_Clic = {-1, -1};
 	
-	Point Pos_Texte_HL = {59, 108};
+	Point Pos_Texte_HL = {59, 108}, Pos_Texte_Explication = {25, 300};
 	Point LigneH_P1 = {0, 0}, LigneH_P2 = {0, 0}, LigneL = {LigneH_P2.x + (Largeur * Espacement), LigneH_P1.y};
 	
 	char Texte_Fixe[12] = "Largeur : "; //Contient "Longueur : " ou "Largeur : "
@@ -514,7 +516,19 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 	
 	int isRightClick = 0, nbr_Sorties = 0;
 	
-	char Tab[64][72] = {{' '}}; //Tableau qui contiendra le lab
+	char Tab[64][72]; //Tableau qui contiendra le lab
+	
+	//On initialise le tableau 
+	
+	for (c=0; c<64;c++)
+	{
+		for (l=0; l<72; l++)
+		{
+			Tab[c][l] = ' ';
+		}
+		
+	}
+	
 	
 	while (1)
 	{
@@ -526,7 +540,25 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 		
 		//Texte d'explication fixe
 		
+		afficher_texte("Clic gauche : Mur", 20, Pos_Texte_Explication, white);
 		
+		Pos_Texte_Explication.y += 100;
+		
+		afficher_texte("Clic gauche sur un ", 20, Pos_Texte_Explication, white);
+		
+		Pos_Texte_Explication.y += 20;
+		
+		afficher_texte("mur : Sortie", 20, Pos_Texte_Explication, white);
+		
+		Pos_Texte_Explication.y += 100;
+		
+		afficher_texte("Clic droit : ", 20, Pos_Texte_Explication, white);
+		
+		Pos_Texte_Explication.y += 20;
+		
+		afficher_texte("Revenir en arrière", 20, Pos_Texte_Explication, white);
+		
+		Pos_Texte_Explication.y -= 240;
 		
 		//Texte Largeur et Hauteur
 		 
@@ -646,6 +678,9 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 				//On observe quel est le caractère actuellement présent où l'on a cliqué
 				char Char_Tab = Get_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, Largeur * 2, Hauteur, Espacement);
 				
+				if (Char_Tab != ' ' || Char_Tab != 'S' || Char_Tab != '*')
+					Char_Tab = ' ';
+				
 				if (isRightClick) //Si c'est un clic droit
 				{
 					if (Char_Tab == 'S') //Si le caractère est une sortie alors un met un mur
@@ -663,7 +698,7 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, 'S', Largeur * 2, Hauteur, Espacement);
 						nbr_Sorties += 1;
 					}
-					else //Sinon on met un mur
+					else if (Char_Tab != 'S' && Char_Tab != '*') //Sinon on met un mur
 						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Largeur * 2, Hauteur, Espacement);
 
 				}
@@ -870,7 +905,7 @@ Sortie Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_
 	
 }
 
-void Refresh_Maze_Editeur(char tab[][72], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement) //Raffraichit le labyrinthe
+void Refresh_Maze_Editeur(char tab[64][72], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement) //Raffraichit le labyrinthe
 {
 
 	int l, c;
