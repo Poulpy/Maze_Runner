@@ -6,8 +6,8 @@
 
 #define FEN_X 1190
 #define FEN_Y 950
-#define BUILD_AUDIO 1
-#define NBR_BTN 17
+#define BUILD_AUDIO 0 //Activer/Désactiver la compilation de la partie son
+#define NBR_BTN 16 //Définition du nombre de boutons présents dans le programme
 
 /* ======== Définitions des structures ======== */
 
@@ -24,7 +24,7 @@ typedef struct Tableau { /* Structure définissant un tableau avec ses lignes et
 	int Colonne;
 } Tableau;
 
-typedef struct Sortie {
+typedef struct Sortie { /* Structure définissant une sortie */
 	Point Pos;
 	Tableau Pos_Tab;
 } Sortie;
@@ -39,7 +39,7 @@ typedef struct Joueur { /* Structure définissant un joueur */
 	int nbrRecompRamasse; /* Le nombre de récompenses qu'un joueur à ramassé sur 3 */
 } Joueur;
 
-typedef struct Bouton {
+typedef struct Bouton { /* Structure définissant un joueur */
 	
 	Point Pos_HautG; /* Position haut gauche d'un bouton */
 	Point Pos_BasD; /* Position bas droite d'un bouton */
@@ -49,7 +49,7 @@ typedef struct Bouton {
 	
 } Bouton;
 
-typedef struct Recompense {
+typedef struct Recompense { /* Structure définissant une récompense */
 	Point Pos;
 	Tableau Pos_Tab;
 	int Status;
@@ -61,15 +61,17 @@ typedef struct Recompense {
 Mix_Music *Musique; //Création d'un pointeur de type Mix_Music
 #endif
 
-int Espacement = 13;
+int Espacement = 13; // L'espacement entre chaque case
 int nbr_Lignes = LIG;
 int nbr_Colonnes = COL;
+
+char* Path_Lab = "./Data/Maze/maze"; //Emplacement du labyrinthe
 
 /* ======== Définitions des prototypes de fonctions ======== */
 
 //Fonctions d'affichage
 Sortie Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_J2, int Espacement);
-void Refresh_Maze_Editeur(char tab[][72], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement);
+void Refresh_Maze_Editeur(char tab[][65], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement);
 void Clear_Screen();
 void Quadrillage(Point Start, Point End);
 
@@ -93,9 +95,9 @@ void Afficher_Bouton(Type_Bouton TypeBouton, Bouton Liste_Bouton[NBR_BTN]);
 void Add_Buttons(Bouton Liste_Bouton[NBR_BTN]);
 
 //Autres fonctions utiles
-void Set_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, char Char, int nbr_Lignes, int nbr_Colonnes, int Espacement);
-char Get_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, int nbr_Lignes, int nbr_Colonnes, int Espacement);
-void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Colonnes, int nbr_Sorties);
+void Set_Char_Tab_By_Pos(char tab[][65], Point Pos_Start, Point Pos, char Char, int nbr_Lignes, int nbr_Colonnes, int Espacement);
+char Get_Char_Tab_By_Pos(char tab[][65], Point Pos_Start, Point Pos, int nbr_Lignes, int nbr_Colonnes, int Espacement);
+void Save_Tab_To_File(char Tab[][65], char *FileName, int nbr_Lignes, int nbr_Colonnes, int nbr_Sorties);
 int min(int a, int b);
 int mon_abs(int a);
 char* Convert_To_String(int i);
@@ -105,23 +107,20 @@ char* Convert_To_String(int i);
 int main(int argc, char *argv[])
 {
 
-	int MainStatus = 0; //Le status que l'on veut pour la boucle principale (Rejouer/Menu/Quitter)
-	//int i;
+	int MainStatut = 0; //Le statut que l'on veut pour la boucle principale (Rejouer/Menu/Quitter)
 	
 	#if BUILD_AUDIO
 	if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1) //Initialisation de SDL Mixer pour les musiques/son
-		printf("%s", Mix_GetError());
+		printf("%s", Mix_GetError()); //Si il y a une erreur d'initialisation
 	#endif
 	
-
-	
-	while (MainStatus != -1) //Tant que MainStatus != -1 on recommence le programme
+	while (MainStatut != -1) //Tant que MainStatus != -1 on recommence le programme
 	{
 		/* ======== Initialisation des variables ======== */
 
 		 //Tableau contentant le labyrinthe
 		 
-		char tab[nbr_Lignes][nbr_Colonnes];
+		char tab[nbr_Lignes][nbr_Colonnes]; //Tableau contentant le labyrinthe
 		
 		Bouton Liste_Boutons[NBR_BTN]; //Tableau contenant les différents boutons des différents menus
 		int col, lig; 
@@ -137,7 +136,7 @@ int main(int argc, char *argv[])
 		
 		Joueur J1 = {0, {0, 0}, {0, 0}, {{0, 0}, {0, 0}}, yellow, 0}, J2 = {0, {0, 0} ,{0, 0}, {{0, 0}, {0, 0}}, yellow, 0};
 		
-		if (MainStatus == 0) //Si on ne veut pas rejouer
+		if (MainStatut == 0) //Si on ne veut pas rejouer
 		{
 			ouvrir_fenetre(FEN_X, FEN_Y);
 			
@@ -285,7 +284,7 @@ int main(int argc, char *argv[])
 				
 				Pos_Temp.x = J2.Pos.x;
 				Pos_Temp.y = J2.Pos.y + Espacement;
-						
+				
 				Deplacement(tab, Pos_Temp, &J2, Espacement, BAS, 0);
 				
 				Touche_Press = 1;				
@@ -382,13 +381,13 @@ int main(int argc, char *argv[])
 		switch (Win(isJ1Win, Liste_Boutons))
 		{
 			case 3: //Rejouer
-				MainStatus = 1;
+				MainStatut = 1;
 				break;
 			case 4: //Menu
-				MainStatus = 0;
+				MainStatut = 0;
 				break;
 			case 5: //On quitte le jeu
-				MainStatus = -1;
+				MainStatut = -1;
 				break;
 		}
 	
@@ -446,7 +445,7 @@ int Main_Menu(char tab[nbr_Lignes][nbr_Colonnes], Bouton Liste_Bouton[NBR_BTN]) 
 				break;
 			case 1:
 			
-				Taille_Tab = charge_labyrinthe("./Data/Maze/maze", tab);
+				Taille_Tab = charge_labyrinthe(Path_Lab, tab);
 			
 				nbr_Colonnes = Taille_Tab.nbr_Colonnes;
 				nbr_Lignes = Taille_Tab.nbr_Lignes;
@@ -502,19 +501,32 @@ int Options(Bouton Liste_Bouton[NBR_BTN])
 
 int Editeur(Bouton Liste_Bouton[NBR_BTN])
 {
-	int Result_Button_Hit = -1, Largeur = 2, Hauteur = 1;
+	int Result_Button_Hit = -1, Largeur = 32, Hauteur = 64, c, l;
 	
 	Point Pos_Clic = {-1, -1};
 	
-	Point Pos_Texte_HL = {59, 108};
+	Point Pos_Texte_HL = {59, 108}, Pos_Texte_Explication = {25, 300};
 	Point LigneH_P1 = {0, 0}, LigneH_P2 = {0, 0}, LigneL = {LigneH_P2.x + (Largeur * Espacement), LigneH_P1.y};
 	
-	char Texte_Fixe[12] = "Largeur : "; //Contient "Longueur : " ou "Largeur : "
-	char* Texte_Variable = Convert_To_String(Largeur); //Contient la longueur ou la largeur
+	//char Texte_Fixe[12] = "Largeur : "; //Contient "Longueur : " ou "Largeur : "
+	char Texte_Variable[10] = ""; //Contient la longueur ou la largeur
+	sprintf(Texte_Variable, "%c", Largeur);
 	
 	int isRightClick = 0, nbr_Sorties = 0;
 	
-	char Tab[64][72] = {{' '}}; //Tableau qui contiendra le lab
+	char Tab[65][65] = {{' '}}; //Tableau qui contiendra le lab
+	
+	//On initialise le tableau 
+	
+	for (c=0; c<65;c++)
+	{
+		for (l=0; l<65; l++)
+		{
+			//printf("Tab[%d][%d] = %c\n", c, l, Tab[c][l]);
+			Tab[c][l] = ' ';
+		}
+		
+	}
 	
 	while (1)
 	{
@@ -526,11 +538,29 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 		
 		//Texte d'explication fixe
 		
+		afficher_texte("Clic gauche : Mur", 20, Pos_Texte_Explication, white);
 		
+		Pos_Texte_Explication.y += 100;
+		
+		afficher_texte("Clic gauche sur un ", 20, Pos_Texte_Explication, white);
+		
+		Pos_Texte_Explication.y += 20;
+		
+		afficher_texte("mur : Sortie", 20, Pos_Texte_Explication, white);
+		
+		Pos_Texte_Explication.y += 100;
+		
+		afficher_texte("Clic droit : ", 20, Pos_Texte_Explication, white);
+		
+		Pos_Texte_Explication.y += 20;
+		
+		afficher_texte("Revenir en arrière", 20, Pos_Texte_Explication, white);
+		
+		Pos_Texte_Explication.y -= 240;
 		
 		//Texte Largeur et Hauteur
 		 
-		afficher_texte(Texte_Fixe,  20, Pos_Texte_HL, white); //On affiche : "Largeur : "
+		afficher_texte("Largeur : ",  20, Pos_Texte_HL, white); //On affiche : "Largeur : "
 		
 		Pos_Texte_HL.x += 100; //On se place au bon endroit pour le texte variable
 		
@@ -540,12 +570,12 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 		
 		Pos_Texte_HL.x -= 100; //On remet comme avant
 		
-		strcpy(Texte_Fixe, "Hauteur : "); //On rechange le texte fixe
+		//strcpy(Texte_Fixe, "Hauteur : "); //On rechange le texte fixe
 		strcpy(Texte_Variable, Convert_To_String(Hauteur)); //On rechange le texte variable pour afficher la hauteur
 		
 		Pos_Texte_HL.y += 50; //On se place au bon endroit pour le second texte fixe
 		
-		afficher_texte(Texte_Fixe, 20, Pos_Texte_HL, white); //On affiche "Hauteur : "
+		afficher_texte("Hauteur : ", 20, Pos_Texte_HL, white); //On affiche "Hauteur : "
 		
 		Pos_Texte_HL.x += 100; //On se place au bon endroit pour le second texte variable
 		
@@ -554,7 +584,7 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 		Pos_Texte_HL.x -= 100; //On se replace au bon endroit pour le premier texte fixe
 		Pos_Texte_HL.y -= 50;
 		
-		strcpy(Texte_Fixe, "Largeur : "); //On rechange le texte fixe
+		//strcpy(Texte_Fixe, "Largeur : "); //On rechange le texte fixe
 		strcpy(Texte_Variable, Convert_To_String(Largeur * 2)); //On rechange le texte variable par la largeur
 		
 		/* ======== Affichage de l'interface (Editeur) ======== */
@@ -618,7 +648,7 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 				return 0;
 				break;
 			case 10: // + Largeur
-				if (Largeur * 2 < 72)
+				if (Largeur * 2 < 64)
 					Largeur += 2;
 				break;
 			case 11: // - Largeur
@@ -634,7 +664,7 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 					Hauteur -= 1;
 				break;
 			case 14: // Sauvegarder et quitter
-				Save_Tab_To_File(Tab, "./Data/Maze/Custom_Maze", Largeur * 2, Hauteur, nbr_Sorties);
+				Save_Tab_To_File(Tab, "./Data/Maze/Custom_Maze", Hauteur, Largeur * 2, nbr_Sorties);
 				return 0;
 				break;
 			case 15:
@@ -650,21 +680,21 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 				{
 					if (Char_Tab == 'S') //Si le caractère est une sortie alors un met un mur
 					{
-						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Largeur * 2, Hauteur, Espacement);
+						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Hauteur, Largeur * 2, Espacement);
 						nbr_Sorties -= 1;
 					}
 					else //Sinon on met du vide
-						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, ' ', Largeur * 2, Hauteur, Espacement);
+						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, ' ', Hauteur, Largeur * 2, Espacement);
 				}
 				else //Si c'est un clic gauche
 				{
 					if (Char_Tab == '*') //Si le caractère est un mur alors on met une sortie
 					{
-						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, 'S', Largeur * 2, Hauteur, Espacement);
+						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, 'S', Hauteur, Largeur * 2, Espacement);
 						nbr_Sorties += 1;
 					}
-					else //Sinon on met un mur
-						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Largeur * 2, Hauteur, Espacement);
+					else if (Char_Tab != 'S' && Char_Tab != '*') //Sinon on met un mur
+						Set_Char_Tab_By_Pos(Tab, Liste_Bouton[15].Pos_HautG, Pos_Clic, '*', Hauteur, Largeur * 2, Espacement);
 
 				}
 				
@@ -676,6 +706,7 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN])
 		Result_Button_Hit = -1;
 		Pos_Clic.x = -1;
 	}
+	
 }
 
 int Check_Win(Joueur J1, Joueur J2) //Regarde quel joueur a gagné / Retourne 1 si le joueur 1 a gagné et 2 si le joueur 2 a gagné
@@ -870,23 +901,26 @@ Sortie Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_
 	
 }
 
-void Refresh_Maze_Editeur(char tab[][72], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement) //Raffraichit le labyrinthe
+void Refresh_Maze_Editeur(char tab[65][65], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement) //Raffraichit le labyrinthe
 {
 
 	int l, c;
 	Point Coin = {Pos_Start.x, Pos_Start.y};
-	
+	//printf("Hauteur reçu : %d\n", nbr_Colonnes);
+	//printf("Largeur reçu : %d\n", nbr_Lignes);
 	for(l=0; l!=nbr_Lignes; l++)
 	{
 		for(c=0; c!=nbr_Colonnes; c++)
 		{
-			//printf("Check tab[%d][%d] who have : %c !\n", l, c, tab[l][c]) ;
+		//	printf("Check tab[%d][%d] who have : %c !\n", l, c, tab[l][c]) ;
 			if (tab[l][c] == '*')
 				afficher_image("./Data/Pictures/Brique.bmp", Coin);
 			else if (tab[l][c] == 'S')
 				afficher_image("./Data/Pictures/Sortie.bmp", Coin);
 			else if (tab[l][c] == ' ')
-				dessiner_rectangle(Coin, Espacement, Espacement, black);
+				dessiner_rectangle(Coin, Espacement, Espacement, green);
+			else //Debug
+				dessiner_rectangle(Coin, Espacement, Espacement, red);
 				
 			Coin.y += Espacement;
 				
@@ -899,7 +933,7 @@ void Refresh_Maze_Editeur(char tab[][72], Point Pos_Start, int nbr_Lignes, int n
 	}
 }
 
-void Save_Tab_To_File(char Tab[][72], char *FileName, int nbr_Lignes, int nbr_Colonnes, int nbr_Sorties)
+void Save_Tab_To_File(char Tab[65][65], char *FileName, int nbr_Lignes, int nbr_Colonnes, int nbr_Sorties)
 {
 	int l, c;
 	FILE* fichier = NULL;
@@ -965,7 +999,7 @@ Tableau Get_Tab_Pos_By_Pos(char tab[][60], Point Pos, int Espacement) //Renvoit 
 	return Pos_J;
 }
 
-char Get_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, int nbr_Lignes, int nbr_Colonnes, int Espacement)
+char Get_Char_Tab_By_Pos(char tab[65][65], Point Pos_Start, Point Pos, int nbr_Lignes, int nbr_Colonnes, int Espacement)
 {
 	int l, c;
 	Point Coin = {Pos_Start.x, Pos_Start.y};
@@ -992,23 +1026,26 @@ char Get_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, int nbr_Lig
 	
 }
 
-void Set_Char_Tab_By_Pos(char tab[][72], Point Pos_Start, Point Pos, char Char, int nbr_Lignes, int nbr_Colonnes, int Espacement)
+void Set_Char_Tab_By_Pos(char tab[65][65], Point Pos_Start, Point Pos, char Char, int nbr_Lignes, int nbr_Colonnes, int Espacement)
 {
 	int l, c;
 	Point Coin = {Pos_Start.x, Pos_Start.y};
+	//printf("Hauteur reçu : %d\n", nbr_Colonnes);
+	//printf("Largeur reçu : %d\n", nbr_Lignes);
 	
-	for(l=0; l!=nbr_Lignes; l++)
+	for(l=0; l!=nbr_Colonnes; l++)
 	{
-		for(c=0; c!=nbr_Colonnes; c++)
+		for(c=0; c!=nbr_Lignes; c++)
 		{
 			//printf("Check : tab[%d][%d] with Coin.x = %d / Coin.y = %d and Pos.x = %d / Pos.y = %d\n", l, c, Coin.x, Coin.y, Pos.x, Pos.y);
 			
 			if (Coin.x + 2 == Pos.x && Coin.y == Pos.y)
 			{
 				//printf("Char set !\n");
-				//printf("Before : %c\n", tab[l][c]);
+				//printf("Before : %c at tab[%d][%d]\n", tab[l][c], l, c);
 				tab[l][c] = Char;
-				//printf("After : %c\n", tab[l][c]);
+				//printf("After : %c at tab[%d][%d]\n", tab[l][c], l, c);
+				return;
 			}
 			
 			Coin.y += Espacement;
@@ -1227,7 +1264,7 @@ void Add_Buttons(Bouton Liste_Bouton[NBR_BTN])
 	Liste_Bouton[13].Image = "";
 	
 	Liste_Bouton[14].Type_Bouton = EDITEUR;
-	Liste_Bouton[14].Pos_HautG.x = 725;
+	Liste_Bouton[14].Pos_HautG.x = 655;
 	Liste_Bouton[14].Pos_HautG.y = 845;
 	Liste_Bouton[14].Pos_BasD.x = 1071;
 	Liste_Bouton[14].Pos_BasD.y = 883;
@@ -1270,9 +1307,9 @@ void Clear_Screen()
 
 char* Convert_To_String(int i)
 {
-	int Longueur = snprintf( NULL, 0, "%d", i);
+	int Longueur = snprintf(NULL, 0, "%d", i);
+	
 	char* str = malloc(Longueur + 1);
 	snprintf(str, Longueur + 1, "%d", i);
 	return str;
-	
 }
