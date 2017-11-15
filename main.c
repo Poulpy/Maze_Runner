@@ -10,7 +10,7 @@
 #define FEN_Y 950
 
 #define DEBUG 1 //Activer/Désactiver le mode debug
-#define BUILD_AUDIO 0 //Activer/Désactiver la compilation de la partie son
+#define BUILD_AUDIO 1 //Activer/Désactiver la compilation de la partie son
 #define NBR_BTN 16 //Définition du nombre de boutons présents dans le programme
 
 /* ======== Définitions des structures ======== */
@@ -253,9 +253,9 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J1.Pos.x;
 				Pos_Temp.y = J1.Pos.y - Espacement;
 						
-				Deplacement(tab, Pos_Temp, &J1, Espacement, HAUT, 1);	
+				Deplacement(tab, Pos_Temp, &J1, Espacement, HAUT, 1);
 				
-				Touche_Press = 1;				
+				Touche_Press = 1;
 			}
 			else if (touche_a_ete_pressee(SDLK_DOWN))
 			{
@@ -263,9 +263,9 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J1.Pos.x;
 				Pos_Temp.y = J1.Pos.y + Espacement;
 					
-				Deplacement(tab, Pos_Temp, &J1, Espacement, BAS, 1);	
+				Deplacement(tab, Pos_Temp, &J1, Espacement, BAS, 1);
 				
-				Touche_Press = 1;										
+				Touche_Press = 1;
 			}
 			else if (touche_a_ete_pressee(SDLK_LEFT))
 			{
@@ -275,7 +275,7 @@ int main(int argc, char *argv[]) //Fonction principale
 						
 				Deplacement(tab, Pos_Temp, &J1, Espacement, GAUCHE, 1);	
 				
-				Touche_Press = 1;						
+				Touche_Press = 1;
 			}
 			else if (touche_a_ete_pressee(SDLK_RIGHT))
 			{
@@ -285,7 +285,7 @@ int main(int argc, char *argv[]) //Fonction principale
 						
 				Deplacement(tab, Pos_Temp, &J1, Espacement, DROITE, 1); 
 				
-				Touche_Press = 1;							
+				Touche_Press = 1;
 			}
 				
 			if (touche_a_ete_pressee(SDLK_z))
@@ -1235,26 +1235,20 @@ void Init_Buttons(Bouton Liste_Bouton[NBR_BTN]) //Initialise les différents bou
 	/* ======== Boutons du menu options ======== */
 	
 	Liste_Bouton[6].Type_Bouton = OPTIONS;
-	Liste_Bouton[6].Pos_HautG.x = 100;
+	Liste_Bouton[6].Pos_HautG.x = (FEN_X / 2) - 150;
 	Liste_Bouton[6].Pos_HautG.y = 100;
-	Liste_Bouton[6].Pos_BasD.x = 150;
-	Liste_Bouton[6].Pos_BasD.y = 150;
 	Liste_Bouton[6].Texte = "Labyrinthe : Défaut";
 	Liste_Bouton[6].Image = "";
 	
 	Liste_Bouton[7].Type_Bouton = OPTIONS;
-	Liste_Bouton[7].Pos_HautG.x = 100;
-	Liste_Bouton[7].Pos_HautG.y = 400;
-	Liste_Bouton[7].Pos_BasD.x = 150;
-	Liste_Bouton[7].Pos_BasD.y = 550;
+	Liste_Bouton[7].Pos_HautG.x = (FEN_X / 2) - 150;
+	Liste_Bouton[7].Pos_HautG.y = 300;
 	Liste_Bouton[7].Texte = "Sauvegarder et quitter";
 	Liste_Bouton[7].Image = "";
 	
 	Liste_Bouton[8].Type_Bouton = OPTIONS;
-	Liste_Bouton[8].Pos_HautG.x = 100;
-	Liste_Bouton[8].Pos_HautG.y = 300;
-	Liste_Bouton[8].Pos_BasD.x = 150;
-	Liste_Bouton[8].Pos_BasD.y = 350;
+	Liste_Bouton[8].Pos_HautG.x = (FEN_X / 2) - 150;
+	Liste_Bouton[8].Pos_HautG.y = 200;
 	Liste_Bouton[8].Texte = "Editeur de labyrinthe";
 	Liste_Bouton[8].Image = "";
 	

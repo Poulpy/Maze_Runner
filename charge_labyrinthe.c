@@ -16,7 +16,7 @@ SizeTab charge_labyrinthe(char *fic, char tab[LIG][COL])
     int l, c, nbrSorties;
     char car;
 
-    printf("charge_labyrinthe: démarrage\n");
+    //printf("charge_labyrinthe: démarrage\n");
     
     if(!f)
     {
@@ -31,12 +31,6 @@ SizeTab charge_labyrinthe(char *fic, char tab[LIG][COL])
     
     Size.nbr_Lignes = lig;
     Size.nbr_Colonnes = col;
-    
-    /* if(lig!=LIG || col != COL) // si différent des valeurs de charge_labyrinthe.h
-    {
-        printf("Fichier '%s': dimensions du tableau lues dans le fichier (%d %d) ne correspondent pas à celles attendues (%d %d).\n",fic, lig, col, LIG, COL);
-	    exit(1);
-    } */
 
     for(l=0;l!=lig;l++) // pour lig lignes
     {
@@ -64,7 +58,7 @@ SizeTab charge_labyrinthe(char *fic, char tab[LIG][COL])
     }
     
     fclose(f); // fermeture du descripteur de fichier
-    printf("charge_labyrinthe: terminé\n");
+    //printf("charge_labyrinthe: terminé\n");
     
     return Size;
 }
