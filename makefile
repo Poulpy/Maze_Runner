@@ -5,7 +5,6 @@ LIB = -lm -lSDL -lSDL_ttf -lSDL_mixer
 OPT = -Wall -g
 
 
-
 SDL_CFLAGS = $(shell sdl-config --cflags)
 SDL_LDFLAGS = $(shell sdl-config --libs)
 

@@ -26,6 +26,9 @@ SizeTab charge_labyrinthe(char *fic, char tab[LIG][COL])
 
     fscanf(f,"%d %d %d\n",&lig,&col, &nbrSorties); // lecture des lignes et colonnes en en-tête
     
+    if (nbrSorties > 2)
+    	printf("Attention : Nombre de sorties supérieur à 2 ! Une ou plusieurs risques de ne pas fonctionner.");
+    
     Size.nbr_Lignes = lig;
     Size.nbr_Colonnes = col;
     

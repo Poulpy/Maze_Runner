@@ -3,7 +3,7 @@
 50 Thoma
 50 AAA
 50 CCC
-40 Tho
-0 0
-0 0
-0 0
+50 dfq
+50 fq
+50 qsf
+50 qsf
