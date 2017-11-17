@@ -1,0 +1,118 @@
+Bibliothèques utilisées :
+	stdio.h, stdlib.h, time.h, libgraphique.h, SDL.h, SDL_mixer.h
+
+Modifications apportées à la libgraphique :
+	- Ajout de la fonction SetWindowTitle
+	- Ajout de l’UTF8
+
+Modfications apportées au fichier maze :
+	- Ajout de sorties : ‘S’ et ‘D’. Modification de charge_labyrinthe.c en conséquence.
+	- Ajout d'une structure SizeTab pour la taille d'un labyrinthe
+	
+Travail accompli :
+	- Les deux joueurs se déplacent grâce aux touches du clavier
+	- Emplacement aléatoire des joueurs et des récompenses
+	- Temps imparti aux joueurs pour atteindre la sortie
+	- Les deux joueurs se déplacent en temps réel
+	- Animations graphiques modestes
+	- Monstres mobiles
+	- Musiques
+	- Editeur de labyrinthe : création et enregistrement d’un labyrinthe (taille variable)
+	- Score évalué en fonction du temps, temps mis par le gagnant pour atteindre la sortie
+	- Enregistrement des scores dans un fichier
+	
+Problèmes rencontrés :
+	- Nombreuses erreurs de segmentation : pour NBR_BTN = 10 il y en avait, sauf pour le nombre exact de boutons.
+	- La déclaration Joueur Joueur mettait en erreur le compilateur car le nom du Joueur est le même que celui de la structure : expected declaration specifiers or ‘...’ before ‘Joueur’.
+	- Les monstres se dédoublent, et, lorsque le joueur en rencontre un, le joueur ne perd pas.
+	- Les monstres, une fois qu’ils ont fait un aller-retour, faisait le chemin contraire de l’aller. Le problème est dû qu’au retour, les valeurs du tableau qui donnait les directions à prendre, étaient inversées.
+	
+	
+Tentatives :
+	- Création de monstres mobiles, disposant d’une IA. Chaque monstre se déplaçait lorsque son joueur s’était déplacé. Si le monstre rencontrait un obstacle, une valeur était incrémentée à la variable dern_mouv, valeur qui dépendait du mouvement : 1 si haut, 2 si droite, 4 si bas, 8 si gauche, et le monstre répétait la boucle permettant le déplacement. Le système étant perfectible, la boucle était finie, puisque, si la boucle était infinie, le jeu s’arrêtait. 
+
+
+int Deplacement_monst(char tab[LIG][COL], Joueur J, Joueur *M, int Espacement, int *dern_mv_m) /* Fais déplacer le monstre dans le tableau du labyrinthe si il n'y pas de collision avec un mur, il faut éviter que le monstre fasse le déplacement inverse de son précedent déplacement*/
+{
+    Tableau Tableau_Temp = {0, 0} ;
+    char Char_Temp = ' ' ;
+    Point Pos_Temp = {0, 0} ;
+    int immobile = 1 compteur = 0 ;
+
+    while (immobile || compteur < 5)
+    {
+    if ((J.Pos.x <= M->Pos.x) && (*dern_mv_m != 2) && (*dern_mv_m != 3) && (*dern_mv_m != 6) && (*dern_mv_m != 10) || (*dern_mv_o == 7) || (*dern_mv_m == 1) || (*dern_mv_m == 4))
+        {
+        Pos_Temp.x = M->Pos.x - Espacement ;
+        Pos_Temp.y = M->Pos.y ;
+
+        Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement) ;
+        Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne] ;
+
+        if (Char_Temp != '*')
+            {
+            M -> Pos.x -= Espacement ;
+            *dern_mv_m = 8 ;
+            immobile = 0 ;
+            }
+        else
+            *dern_mv_m += 2 ;
+        }//FIN  IF
+    else if ((J.Pos.y > M->Pos.y) && (*dern_mv_m != 1) && (*dern_mv_m != 3) && (*dern_mv_m != 9) && (*dern_mv_m != 5) || (*dern_mv_m == 11) || (*dern_mv_m == 8) || (*dern_mv_m == 2))
+        {
+        Pos_Temp.x = M->Pos.x ;
+        Pos_Temp.y = M->Pos.y + Espacement ;
+
+        Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement) ;
+        Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne] ;
+
+        if (Char_Temp != '*')
+            {
+            M -> Pos.y += Espacement ;
+            *dern_mv_m = 4 ;
+            immobile = 0 ;
+            }
+        else
+            *dern_mv_m += 1 ;
+        }//FIN ELSE IF
+    else if ((J.Pos.x > M->Pos.x) && (*dern_mv_m != 8) && (*dern_mv_m != 9) && (*dern_mv_m != 5) || (*dern_mv_m == 12) || (*dern_mv_m == 1) || (*dern_mv_m == 4) || (*dern_mv_m == 13) || (*dern_mv_m == 7))
+        {
+        Pos_Temp.x = M->Pos.x + Espacement ;
+        Pos_Temp.y = M->Pos.y ;
+
+        Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement) ;
+        Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne] ;
+
+        if (Char_Temp != '*')
+            {
+            M -> Pos.x += Espacement ;
+            *dern_mv_m = 2 ;
+            immobile = 0 ;
+            }
+        else
+            *dern_mv_m += 8 ;
+        }//FIN ELSE IF
+    else if ( (J.Pos.y < M->Pos.y) && (*dern_mv_m != 4) && (*dern_mv_m != 12) && (*dern_mv_m != 6) && (*dern_mv_m != 10)|| (*dern_mv_m == 8) || (*dern_mv_m == 12) || (*dern_mv_m == 2) || (*dern_mv_m == 3) || (*dern_mv_m == 15))
+        {
+        Pos_Temp.x = M->Pos.x ;
+        Pos_Temp.y = M->Pos.y - Espacement ;
+
+        Tableau_Temp = Get_Tab_Pos_By_Pos(tab, Pos_Temp, Espacement) ;
+        Char_Temp = tab[Tableau_Temp.Ligne][Tableau_Temp.Colonne] ;
+
+        if (Char_Temp != '*')
+            {
+            M -> Pos.y -= Espacement ;
+            *dern_mv_m = 1 ;
+            immobile = 0 ;
+            }
+        else
+            *dern_mv_m += 4 ;
+        }//FIN ELSE IF
+    compteur++ ;
+    }// FIN WHILE
+    return 0 ;
+}// FIN FONCTION
+
+
+-

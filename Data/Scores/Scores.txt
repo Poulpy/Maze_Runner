@@ -1,9 +1,9 @@
-50 Tho
-50 Po
-50 Thoma
 50 AAA
+50 BBB
 50 CCC
-50 dfq
-50 fq
-50 qsf
-50 qsf
+50 DDD
+50 AAA
+50 AAA
+40 EEE
+40 FFF
+30 GGG

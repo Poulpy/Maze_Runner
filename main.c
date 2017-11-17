@@ -9,7 +9,7 @@
 #define FEN_X 1190
 #define FEN_Y 950
 
-#define DEBUG 1 //Activer/Désactiver le mode debug
+#define DEBUG 0 //Activer/Désactiver le mode debug
 #define BUILD_AUDIO 1 //Activer/Désactiver la compilation de la partie son
 #define NBR_BTN 16 //Définition du nombre de boutons présents dans le programme
 
@@ -45,6 +45,14 @@ typedef struct Joueur { /* Structure définissant un joueur */
 	int nbrRecompRamasse; /* Le nombre de récompenses qu'un joueur à ramassé sur 3 */
 } Joueur;
 
+typedef struct Monstre {
+	Point Pos1; //Position du monstre, pour le joueur 1
+	Point Pos2; //Position du monstre, pour le joueur 2
+	Tableau Pos_Tab;
+	int indice; //Montre à quel case du tableau le monstre en est
+	int aller; //Booléen ; montre si le monstre fait l'aller ou le retour
+} Monstre;
+
 typedef struct Bouton { /* Structure définissant un joueur */
 	
 	Point Pos_HautG; /* Position haut gauche d'un bouton */
@@ -76,7 +84,7 @@ char* Path_Lab = "./Data/Maze/maze"; //Emplacement du labyrinthe
 /* ======== Définitions des prototypes de fonctions ======== */
 
 //Fonctions d'affichage
-Sorties Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_J2, int Espacement);
+Sorties Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_J2, Point Pos_M1, Point Pos_M2, int Espacement);
 void Refresh_Maze_Editeur(char tab[][65], Point Pos_Start, int nbr_Lignes, int nbr_Colonnes, int Espacement);
 void Clear_Screen();
 void Quadrillage(Point Start, Point End);
@@ -87,13 +95,14 @@ int Options(Bouton Liste_Bouton[NBR_BTN]);
 int Editeur(Bouton Liste_Bouton[NBR_BTN]);
 
 //Fonctions de déplacement
-void Deplacement(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1);
+void Deplacement(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_Temp, Joueur *Joueur, Monstre *M, int Espacement, Direction direction, int isJ1, Direction depla_m[]);
 void Check_And_Change_Letter(char tab[nbr_Lignes][nbr_Colonnes], int isJ1, int Phase2, Joueur Joueur);
 Tableau Get_Tab_Pos_By_Pos(char tab[][60], Point Pos, int Espacement);
 void Affiche_mouvement(Joueur *J, int Espacement, Direction direction);
+void Deplacement_Monstre(Monstre *M, int Espacement, Direction depla_m[]);
 
 //Fonctions lors de la victoire
-int Check_Win(Joueur J1, Joueur J2, int Force_Check);
+int Check_Win(Joueur J1, Joueur J2, int Force_Check, Monstre M, time_t Debut_Chrono, float Limite);
 int Win(int isJ1, Bouton Liste_Bouton[NBR_BTN], Joueur *J1, Joueur *J2);
 
 //Fonctions gérants les boutons
@@ -117,6 +126,8 @@ void Entrez_Noms_Joueur(Joueur *J1, Joueur *J2);
 int min(int a, int b);
 int mon_abs(int a);
 char* Convert_To_String(int i);
+void Coord_Aleat(int *j_x, int *j_y, int nbr_Colonnes, int nbr_Lignes);
+void Position_Temporaire(Point *Pos_Temp, Joueur J, int x, int plus, int Espacement);
 
 /* ======== Main ======== */
 
@@ -139,7 +150,7 @@ int main(int argc, char *argv[]) //Fonction principale
 		char tab[nbr_Lignes][nbr_Colonnes]; //Tableau contentant le labyrinthe
 		
 		Bouton Liste_Boutons[NBR_BTN]; //Tableau contenant les différents boutons des différents menus
-		int col, lig; 
+		int j_x, j_y, m_x = 43, m_y = 61;
 		int isJ1Win = 0;
 		
 		//Variables de la boucle de mouvement
@@ -155,10 +166,13 @@ int main(int argc, char *argv[]) //Fonction principale
 		//Variables gérant le chronomètre
 		
 		time_t Depart, Arrive;
-		time_t Debut_Chrono = time(NULL);
 		time(&Depart); //Début du jeu
+		time_t Debut_Chrono = time(NULL);
 		float Limite = 120.0f; //Limite de temps de jeu : 120 secondes / 2 minutes
 		
+		//Variables des monstres
+		Monstre M = {{0, 0},{0, 0}, {0, 0}, 0, 1};
+		Direction depla_m[43] = {GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, GAUCHE, HAUT, HAUT, HAUT, HAUT, HAUT, GAUCHE, GAUCHE, GAUCHE, BAS, BAS, GAUCHE, GAUCHE, BAS, GAUCHE, BAS, GAUCHE, BAS, GAUCHE, GAUCHE, HAUT, HAUT, HAUT, HAUT}; //Déplacement du monstre
 		
 		if (MainStatut == 0) //Si on ne veut pas rejouer et qu'on retourne au menu
 		{
@@ -183,34 +197,42 @@ int main(int argc, char *argv[]) //Fonction principale
 		do
 		{
 		 	
-			col = entier_aleatoire(nbr_Colonnes); //Emplacement verticale
-			lig = entier_aleatoire(nbr_Lignes); //Emplacement horizontale
+			Coord_Aleat(&j_x, &j_y, nbr_Colonnes, nbr_Lignes) ;
 			
-			while (tab[lig][col] == '*' || tab[lig][col] == 'S') //Tant que l'on est sur un mur où une sortie
+			while (tab[j_y][j_x] == '*' || tab[j_y][j_x] == 'S') //Tant que l'on est sur un mur où une sortie
 			{
-				col = entier_aleatoire(nbr_Colonnes);
-				lig = entier_aleatoire(nbr_Lignes);
+				Coord_Aleat(&j_x, &j_y, nbr_Colonnes, nbr_Lignes) ;
 			}
 			
-			tab[lig][col]= 'T';
+			tab[j_y][j_x]= 'T';
 		
-			J1.Pos.x = col * Espacement;
-			J1.Pos.y = lig * Espacement;
+			J1.Pos.x = j_x * Espacement;
+			J1.Pos.y = j_y * Espacement;
 			
 			J2.Pos.x = J1.Pos.x + 600;
 			J2.Pos.y = J1.Pos.y;
-		 	
-		} while ((J1.Pos.x > (nbr_Lignes * Espacement) + 2) || (J1.Pos.y > (nbr_Colonnes * Espacement) + 2)); //Tant que la position des joueurs dépasse celle maximum
+			
+			tab[m_y][m_x] = 'M';
+			M.Pos1.x = m_x * Espacement;
+			M.Pos1.y = m_y * Espacement;
+
+			M.Pos2.x = m_x*Espacement + 600 ;
+			M.Pos2.y = m_y*Espacement;
+
+		} while ((J1.Pos.x > (nbr_Lignes * Espacement) + 2) || (J1.Pos.y > (nbr_Colonnes * Espacement) + 2)); //Tant que la position des joueurs dépasse celle maximum des tableaux
 		
 		/* On configure la position des 2 joueurs ainsi que celle de leur sortie */
 		
-		J1.Pos_Tab.Colonne = col;
-		J1.Pos_Tab.Ligne = lig;
+		J1.Pos_Tab.Colonne = j_x;
+		J1.Pos_Tab.Ligne = j_y;
 		 
-		J2.Pos_Tab.Colonne = col;
-		J2.Pos_Tab.Ligne = lig;
+		J2.Pos_Tab.Colonne = j_x;
+		J2.Pos_Tab.Ligne = j_y;
 		
-		J2.Sortie = Refresh_Maze(tab, J1.Pos, J2.Pos, Espacement);
+		M.Pos_Tab.Colonne = m_x;
+		M.Pos_Tab.Colonne = m_y;
+		
+		J2.Sortie = Refresh_Maze(tab, J1.Pos, J2.Pos, M.Pos1, M.Pos2, Espacement);
 		
 		J1.Sortie.Pos1 = J2.Sortie.Pos1;
 		J1.Sortie.Pos2 = J2.Sortie.Pos2;
@@ -239,7 +261,7 @@ int main(int argc, char *argv[]) //Fonction principale
 		Mix_PlayMusic(Musique, -1); //On joue la musique du jeu
 		#endif
 		
-		while (!Check_Win(J1, J2, 0) && (time(NULL) - Debut_Chrono) < Limite) //Tant qu'un joueur n'a pas gagné où que le chronomètre n'est pas terminer
+		while (!Check_Win(J1, J2, 0, M, Debut_Chrono, Limite)) //Tant qu'un joueur n'a pas gagné où que le chronomètre n'est pas terminer
 		{
 			
 			traiter_evenements(); //On enregistre les évènements
@@ -253,7 +275,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J1.Pos.x;
 				Pos_Temp.y = J1.Pos.y - Espacement;
 						
-				Deplacement(tab, Pos_Temp, &J1, Espacement, HAUT, 1);
+				Deplacement(tab, Pos_Temp, &J1, &M, Espacement, HAUT, 1, depla_m);
 				
 				Touche_Press = 1;
 			}
@@ -263,7 +285,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J1.Pos.x;
 				Pos_Temp.y = J1.Pos.y + Espacement;
 					
-				Deplacement(tab, Pos_Temp, &J1, Espacement, BAS, 1);
+				Deplacement(tab, Pos_Temp, &J1, &M, Espacement, BAS, 1, depla_m);
 				
 				Touche_Press = 1;
 			}
@@ -273,7 +295,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J1.Pos.x - Espacement;
 				Pos_Temp.y = J1.Pos.y;
 						
-				Deplacement(tab, Pos_Temp, &J1, Espacement, GAUCHE, 1);	
+				Deplacement(tab, Pos_Temp, &J1, &M, Espacement, GAUCHE, 1, depla_m);	
 				
 				Touche_Press = 1;
 			}
@@ -283,7 +305,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J1.Pos.x + Espacement;
 				Pos_Temp.y = J1.Pos.y;
 						
-				Deplacement(tab, Pos_Temp, &J1, Espacement, DROITE, 1); 
+				Deplacement(tab, Pos_Temp, &J1, &M, Espacement, DROITE, 1, depla_m); 
 				
 				Touche_Press = 1;
 			}
@@ -294,7 +316,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J2.Pos.x;
 				Pos_Temp.y = J2.Pos.y - Espacement;
 						
-				Deplacement(tab, Pos_Temp, &J2, Espacement, HAUT, 0);
+				Deplacement(tab, Pos_Temp, &J2, &M, Espacement, HAUT, 0, depla_m);
 				
 				Touche_Press = 1;				
 			}
@@ -304,7 +326,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J2.Pos.x;
 				Pos_Temp.y = J2.Pos.y + Espacement;
 				
-				Deplacement(tab, Pos_Temp, &J2, Espacement, BAS, 0);
+				Deplacement(tab, Pos_Temp, &J2, &M, Espacement, BAS, 0, depla_m);
 				
 				Touche_Press = 1;				
 			}
@@ -314,7 +336,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J2.Pos.x - Espacement;
 				Pos_Temp.y = J2.Pos.y;
 
-				Deplacement(tab, Pos_Temp, &J2, Espacement, GAUCHE, 0);	
+				Deplacement(tab, Pos_Temp, &J2, &M, Espacement, GAUCHE, 0, depla_m);	
 				
 				Touche_Press = 1;
 			}
@@ -324,7 +346,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				Pos_Temp.x = J2.Pos.x + Espacement;
 				Pos_Temp.y = J2.Pos.y;
 						
-				Deplacement(tab, Pos_Temp, &J2, Espacement, DROITE, 0);	
+				Deplacement(tab, Pos_Temp, &J2, &M, Espacement, DROITE, 0, depla_m);	
 				
 				Touche_Press = 1;
 			}
@@ -384,7 +406,7 @@ int main(int argc, char *argv[]) //Fonction principale
 				if (J1.Score >= 1000 || J2.Score >= 1000)
 					Pos_Score_Texte.x += 5;
 				
-				Refresh_Maze(tab, J1.Pos, J2.Pos, Espacement); //On met à jour le lab
+				Refresh_Maze(tab, J1.Pos, J2.Pos, M.Pos1, M.Pos2, Espacement); //On met à jour le lab
 			
 				actualiser(); //On actualise le tout
 			
@@ -394,7 +416,7 @@ int main(int argc, char *argv[]) //Fonction principale
 			
 		}
 		
-		isJ1Win = Check_Win(J1, J2, 1); //On regarde si un joueur à atteint la sortie
+		isJ1Win = Check_Win(J1, J2, 1, M, Debut_Chrono, Limite); //On regarde si un joueur à atteint la sortie
 		
 		if (isJ1Win == 1) //On remet la sortie dans la tableau
 		{
@@ -731,18 +753,21 @@ int Editeur(Bouton Liste_Bouton[NBR_BTN]) //Editeur graphique de labyrinthe
 	
 }
 
-int Check_Win(Joueur J1, Joueur J2, int Force_Check) //Regarde quel joueur a gagné / Retourne 1 si le joueur 1 a gagné, 2 si le joueur 2 a gagné et 3 si les joueurs ont perdu au chronomètre
+
+int Check_Win(Joueur J1, Joueur J2, int Force_Check, Monstre M, time_t Debut_Chrono, float Limite) //Regarde quel joueur a gagné / Retourne 1 si le joueur 1 a gagné, 2 si le joueur 2 a gagné et 3 si les joueurs ont perdu au chronomètre
 {
-	if ( (((J1.Pos.x != J1.Sortie.Pos1.x) || (J1.Pos.y != J1.Sortie.Pos1.y)) && ((J2.Pos.x != J2.Sortie.Pos1.x) || (J2.Pos.y != J2.Sortie.Pos1.y))) && (((J1.Pos.x != J1.Sortie.Pos2.x) || (J1.Pos.y != J1.Sortie.Pos2.y)) && ((J2.Pos.x != J2.Sortie.Pos2.x) || (J2.Pos.y != J2.Sortie.Pos2.y))) && Force_Check == 0) //Si aucun des joueurs n'est à la sortie
+	if ( ((J1.Pos.x != J1.Sortie.Pos1.x) && (J1.Pos.y != J1.Sortie.Pos1.y)) && ((J1.Pos.x != J1.Sortie.Pos2.x) && (Force_Check == 0) && (J1.Pos.y != J1.Sortie.Pos2.y)) && ((J2.Pos.x != J2.Sortie.Pos1.x) && (J2.Pos.y != J2.Sortie.Pos1.y)) && ((J2.Pos.x != J2.Sortie.Pos2.x) && (J2.Pos.y != J2.Sortie.Pos2.y)) && ((J1.Pos.x != M.Pos1.x) && (J1.Pos.y != M.Pos1.y)) && ((J2.Pos.x != M.Pos2.x) && (J2.Pos.y != M.Pos2.y)) ) //Si aucun des joueurs n'est à la sortie
 		return 0;
 	else	
 	{
-		if (((J1.Pos.x == J1.Sortie.Pos1.x) && (J1.Pos.y == J1.Sortie.Pos1.y)) || ((J1.Pos.x == J1.Sortie.Pos2.x) && (J1.Pos.y == J1.Sortie.Pos2.y))) //Si le joueur 1 est à la sortie
+		if ( ((J1.Pos.x == J1.Sortie.Pos1.x) && (J1.Pos.y==J1.Sortie.Pos1.y)) || ((J1.Pos.x==J1.Sortie.Pos2.x) && (J1.Pos.y==J1.Sortie.Pos2.y)) || ((J2.Pos.x == M.Pos1.x) && (J2.Pos.y == M.Pos1.y)) ) //Si le joueur 1 est à la sortie
 			return 1;
-		else if (((J2.Pos.x == J2.Sortie.Pos1.x) && (J2.Pos.y == J2.Sortie.Pos1.y)) || ((J2.Pos.x == J2.Sortie.Pos2.x) && (J2.Pos.y == J2.Sortie.Pos2.y))) //Si le joueur 2 est à la sortie
+		else if ( ((J2.Pos.x == J2.Sortie.Pos1.x) && (J2.Pos.y==J2.Sortie.Pos1.y)) || ((J2.Pos.x==J2.Sortie.Pos2.x) && (J2.Pos.y==J2.Sortie.Pos2.y)) || ((J1.Pos.x == M.Pos2.x) && (J1.Pos.y == M.Pos2.y))  ) //Si le joueur 2 est à la sortie
 			return 2;
-		else //Sinon les joueurs ont perdu au chronomètre
+		else if ((time(NULL) - Debut_Chrono) > Limite) //Sinon les joueurs ont perdu au chronomètre
 			return 3;
+		else
+			return 0;
 	}
 }
 
@@ -803,7 +828,7 @@ int Win(int playerWin, Bouton Liste_Bouton[NBR_BTN], Joueur *J1, Joueur *J2) //A
 }
 
 
-void Deplacement(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_Temp, Joueur *Joueur, int Espacement, Direction Direction, int isJ1) //Déplace le joueur dans le tableau du labyrinthe si il n'y pas de collision avec un mur
+void Deplacement(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_Temp, Joueur *Joueur, Monstre *M, int Espacement, Direction direction, int isJ1, Direction depla_m[]) //Déplace le joueur dans le tableau du labyrinthe si il n'y pas de collision avec un mur
 {
 	
 	Tableau Tableau_Temp = {0, 0};
@@ -816,13 +841,13 @@ void Deplacement(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_Temp, Joueur *Jou
 	if (Char_Temp != '*') //S'il ne s'agit pas d'un mur alors on déplace le joueur
 	{
 		//On affiche l'animation de mouvement + on bouge la position graphique du joueur
-		if (Direction == HAUT)
+		if (direction == HAUT)
 			Affiche_mouvement(Joueur, Espacement, HAUT);
-		else if (Direction == BAS)
+		else if (direction == BAS)
 			Affiche_mouvement(Joueur, Espacement, BAS);
-		else if (Direction == GAUCHE)
+		else if (direction == GAUCHE)
 			Affiche_mouvement(Joueur, Espacement, GAUCHE);
-		else if (Direction == DROITE)
+		else if (direction == DROITE)
 			Affiche_mouvement(Joueur, Espacement, DROITE);
 			
 		//On enlève le joueur de son ancienne case
@@ -840,6 +865,57 @@ void Deplacement(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_Temp, Joueur *Jou
 			Check_And_Change_Letter(tab, 0, 1, *Joueur);
 			
 	}
+	Deplacement_Monstre(M, Espacement, depla_m) ;// les monstres se déplacent
+}
+
+void Deplacement_Monstre(Monstre *M, int Espacement, Direction depla_m[])
+{
+	dessiner_rectangle(M->Pos1, Espacement, Espacement, noir);
+	dessiner_rectangle(M->Pos2, Espacement, Espacement, noir);
+	
+	while (1)
+		{
+		if ((depla_m[M->indice] == 0 && M->aller == 1) || (depla_m[M->indice] == 1 && M->aller == 0))
+			{
+				M->Pos1.y -= Espacement;
+				M->Pos2.y -= Espacement;
+				break;
+			}
+		else if ((depla_m[M->indice] == 1 && M->aller == 1) || (depla_m[M->indice] == 0 && M->aller == 0))
+			{
+				M->Pos1.y += Espacement;
+				M->Pos2.y += Espacement;
+				break;
+			}
+		else if ((depla_m[M->indice] == 2 && M->aller == 1) || (depla_m[M->indice] == 3 && M->aller == 0))
+			{
+				M->Pos1.x -= Espacement;
+				M->Pos2.x -= Espacement;
+				break;
+			}
+		else if ((depla_m[M->indice] == 3 && M->aller == 1) || (depla_m[M->indice] == 2 && M->aller == 0))
+			{
+				M->Pos1.x += Espacement;
+				M->Pos2.x += Espacement;
+				break;
+			}
+		break ;
+		}
+
+	if (M->aller == 1)// 1 : l'aller
+		{
+			if (M->indice == 42)// si le monstre a parcouru le chemin en entier
+				M->aller = 0 ;// ce booléen va inverser les directions
+			else
+				(M->indice)++ ;
+		}
+	else if (M->aller == 0)// 0 : le retour
+		{
+			if (M->indice == 0)
+				M->aller = 1 ;
+			else
+				(M->indice)-- ;
+		}
 }
 
 void Check_And_Change_Letter(char tab[nbr_Lignes][nbr_Colonnes], int isJ1, int Phase2, Joueur Joueur) //On regarde s'il n'y pas collision entre les 2 joueurs dans le tableau du lab + changement dans le tableau dans l'ancienne et la nouvelle case
@@ -876,9 +952,8 @@ void Check_And_Change_Letter(char tab[nbr_Lignes][nbr_Colonnes], int isJ1, int P
 	}
 }
 
-Sorties Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_J2, int Espacement) //Raffraichit le labyrinthe pour les 2 joueurs. Renvoie les sorties trouvées dans le labyrinthe
+Sorties Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos_J2, Point Pos_M1, Point Pos_M2, int Espacement) //Raffraichit le labyrinthe pour les 2 joueurs. Renvoie les sorties trouvées dans le labyrinthe
 {
-
 	int i, l, c, nbr_Sorties = 0;
 	Point Coin = {0, 0};
 	Sorties Sorties_R = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
@@ -909,7 +984,25 @@ Sorties Refresh_Maze(char tab[nbr_Lignes][nbr_Colonnes], Point Pos_J1, Point Pos
 						else
 							dessiner_rectangle(Coin, Espacement, Espacement, noir);
 					}
-				}	
+				}
+				
+				else if (tab[l][c] == 'M')// M pour monstre
+					{
+					if (i == 0)
+						{
+						if (tab[l][c] == 'M')// J1
+							afficher_image("./Data/Pictures/Monstre.bmp", Pos_M1);
+						else
+							dessiner_rectangle(Coin, Espacement, Espacement, noir);
+						}
+					else if (i == 1)
+						{
+						if (tab[l][c] == 'M')// J2
+					afficher_image("./Data/Pictures/Monstre.bmp", Pos_M2);
+						else
+							dessiner_rectangle(Coin, Espacement, Espacement, noir);
+						}
+					}
 				
 				else if (tab[l][c] == 'S') //S'il s'agit d'une sortie
 				{
@@ -1237,18 +1330,24 @@ void Init_Buttons(Bouton Liste_Bouton[NBR_BTN]) //Initialise les différents bou
 	Liste_Bouton[6].Type_Bouton = OPTIONS;
 	Liste_Bouton[6].Pos_HautG.x = (FEN_X / 2) - 150;
 	Liste_Bouton[6].Pos_HautG.y = 100;
+	Liste_Bouton[6].Pos_BasD.x = 776;
+	Liste_Bouton[6].Pos_BasD.y = 138;
 	Liste_Bouton[6].Texte = "Labyrinthe : Défaut";
 	Liste_Bouton[6].Image = "";
 	
 	Liste_Bouton[7].Type_Bouton = OPTIONS;
 	Liste_Bouton[7].Pos_HautG.x = (FEN_X / 2) - 150;
 	Liste_Bouton[7].Pos_HautG.y = 300;
+	Liste_Bouton[7].Pos_BasD.x = 792;
+	Liste_Bouton[7].Pos_BasD.y = 338;
 	Liste_Bouton[7].Texte = "Sauvegarder et quitter";
 	Liste_Bouton[7].Image = "";
 	
 	Liste_Bouton[8].Type_Bouton = OPTIONS;
 	Liste_Bouton[8].Pos_HautG.x = (FEN_X / 2) - 150;
 	Liste_Bouton[8].Pos_HautG.y = 200;
+	Liste_Bouton[8].Pos_BasD.x = 765;
+	Liste_Bouton[8].Pos_BasD.y = 238;
 	Liste_Bouton[8].Texte = "Editeur de labyrinthe";
 	Liste_Bouton[8].Image = "";
 	
@@ -1488,10 +1587,37 @@ void Clear_Screen() //Supprime tous les éléments de l'écran en dessinant un r
 	dessiner_rectangle(Origin, FEN_X, FEN_Y, black);
 }
 
-char* Convert_To_String(int i) //Convertit un entier en char*
+char* Convert_To_String(int i) //Convertit un entier en char* (Problème ne libère pas la mémoire)
 {
 	int Longueur = snprintf(NULL, 0, "%d", i);
 	char* str = malloc(Longueur + 1);
 	snprintf(str, Longueur + 1, "%d", i);
 	return str;
+}
+
+
+void Coord_Aleat(int *j_x, int *j_y, int nbr_Colonnes, int nbr_Lignes)
+{
+	*j_x = entier_aleatoire(nbr_Colonnes) ;
+	*j_y = entier_aleatoire(nbr_Lignes) ;
+}
+
+void Position_Temporaire(Point *Pos_Temp, Joueur J, int x, int plus, int Espacement)
+{
+	if (x)// on regarde si c'est l'abscisse qu'on veut changer
+		{
+		if (plus)// on regarde si on ajoute ou retranche
+			Pos_Temp->x = J.Pos.x + Espacement ;
+		else// on retranche
+			Pos_Temp->x = J.Pos.x - Espacement ;
+		Pos_Temp->y = J.Pos.y ;
+		}
+	else// on change l'ordonnée
+		{
+		if (plus)
+			Pos_Temp->y = J.Pos.y + Espacement ;
+		else
+			Pos_Temp->y = J.Pos.y - Espacement ;
+		Pos_Temp->x = J.Pos.y ;
+		}
 }
